@@ -29,8 +29,8 @@ namespace vue_netcore_chatroom.Models
                 Email = dbModel.Email,
                 FirstName = dbModel.FirstName,
                 LastName = dbModel.LastName,
-                Location = dbModel.Location,
-                Bio = dbModel.Bio,
+                Location = dbModel.Location ?? "",
+                Bio = dbModel.Bio ?? "",
                 Archived = dbModel.Archived,
                 CreatedAt = dbModel.CreatedAt,
                 UpdatedAt = dbModel.UpdatedAt
