@@ -15,6 +15,7 @@
     <None Remove="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <None Remove="Microsoft.Identity.Web" />
     <None Remove="Microsoft.EntityFrameworkCore.Design" />
+    <None Remove="Services\" />
     <None Remove="Helpers\" />
   </ItemGroup>
   <ItemGroup>
@@ -30,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="Services\" />
     <Folder Include="Helpers\" />
   </ItemGroup>
 </Project>

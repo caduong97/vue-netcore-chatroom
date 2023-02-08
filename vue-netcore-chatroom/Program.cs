@@ -7,6 +7,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.Extensions.DependencyInjection;
+using vue_netcore_chatroom.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 IConfiguration configuration = builder.Configuration;
@@ -35,13 +37,29 @@ builder.Services.AddAuthentication()
 
         options.Events = new JwtBearerEvents();
     })
+    .AddJwtBearer("CustomJwtAuth", options =>
+    {
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration["CustomJwtAuth:SecretKey"])),
+            ValidIssuer = configuration["CustomJwtAuth:Issuer"],
+            ValidAudience = configuration["CustomJwtAuth:Audience"],
+            ValidateLifetime = true,
+            RequireExpirationTime = false,
+            ClockSkew = new TimeSpan(0, 0, 30)
+        };
+
+        options.Events = new JwtBearerEvents();
+    })
     .AddMicrosoftIdentityWebApi(configuration, "AzureAd", "AzureAdAuth");
 
 
 builder.Services.AddAuthorization(options =>
 {
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
-        .AddAuthenticationSchemes("AzureAdAuth", "FirebaseAuth")
+        .AddAuthenticationSchemes("AzureAdAuth", "FirebaseAuth", "CustomJwtAuth")
         .RequireAuthenticatedUser()
         .Build();
 });
@@ -67,6 +85,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowDev", corsPolicy);
 });
+
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
