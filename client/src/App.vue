@@ -1,13 +1,7 @@
 <template>
   <v-app id="app">
-    <!-- <div id="nav">
-      <router-link to="/">Home</router-link> |
-    </div> -->
-
     <LoadingIndicator></LoadingIndicator>
     <router-view/>
-
-    
   </v-app>
 </template>
 
@@ -70,6 +64,7 @@ export default class App extends Vue {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: auto;
 
 }
 

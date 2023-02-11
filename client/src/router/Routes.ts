@@ -3,7 +3,7 @@ import SignIn from "@/views/SignIn.vue";
 import SignUp from "@/views/SignUp.vue";
 import Home from '@/views/Home.vue';
 import AuthStore from "@/store/AuthStore";
-
+import Profile from "@/views/Profile.vue";
 export class Routes {
 
   public static SignedInNavGuard: NavigationGuard<Vue> = (to: Route, from: Route, next: NavigationGuardNext) => {
@@ -14,23 +14,37 @@ export class Routes {
         next();
       }
   }
-    
-  public static Home: RouteConfig = {
-    path: "/",
-    name: "Home",
-    beforeEnter: Routes.SignedInNavGuard,
-    component: Home
-  }
+
   public static SignIn: RouteConfig = {
     path: "/signIn",
     name: "Sign In",
     component: SignIn
   }
+
   public static SignUp: RouteConfig = {
     path: "/signUp",
     name: "Sign Up",
     component: SignUp
   }
+
+  public static MyProfile: RouteConfig = {
+    path: "my-profile",
+    name: "Profile",
+    component: Profile
+  }
+    
+  public static Home: RouteConfig = {
+    path: "/",
+    name: "Home",
+    beforeEnter: Routes.SignedInNavGuard,
+    component: Home,
+    children: [
+      Routes.MyProfile
+    ]
+  }
+
+
+  
 }
 
 const routes: RouteConfig[] = [
