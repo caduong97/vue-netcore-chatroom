@@ -16,6 +16,8 @@ namespace vue_netcore_chatroom.Models
 
 		public List<ChatUser> ChatUsers { get; set; }
 
+        public List<Guid> ChatUserIds => ChatUsers?.Where(cu => cu.UserId.HasValue).Select(cu => cu.UserId.Value).ToList();
+
 		public List<Message> Messages { get; set; }
 	}
 }
