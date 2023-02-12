@@ -27,6 +27,8 @@ namespace vue_netcore_chatroom.Models
 
         public DateTime UpdatedAt { get; set; }
 
+        public List<ChatUser> ChatUsers { get; set; }
+
     }
 }
 
