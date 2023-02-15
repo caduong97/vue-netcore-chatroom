@@ -27,10 +27,22 @@ namespace vue_netcore_chatroom.Models
                 CreatedAt = dbModel.CreatedAt,
                 UpdatedAt = dbModel.UpdatedAt,
                 ChatUserIds = dbModel.ChatUserIds,
-                Messages = dbModel.Messages.Select(m => MessageDto.FromDbModel(m)).ToList()
+                Messages = dbModel.Messages?.Select(m => MessageDto.FromDbModel(m)).ToList() ?? new List<MessageDto>()
             };
 
             return dto;
+        }
+
+        public static Chat ToDbModel(ChatDto dto)
+        {
+            var dbModel = new Chat()
+            {
+                Name = dto.Name,
+                CreatedAt = dto.CreatedAt,
+                UpdatedAt = dto.UpdatedAt
+            };
+
+            return dbModel;
         }
     }
 }

@@ -88,6 +88,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 

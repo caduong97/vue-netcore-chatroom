@@ -34,4 +34,7 @@
     <Folder Include="Services\" />
     <Folder Include="Helpers\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Remove="Services\ChatService.json" />
+  </ItemGroup>
 </Project>
