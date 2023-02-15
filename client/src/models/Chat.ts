@@ -1,7 +1,8 @@
 import Message from "./Message";
+import { Guid } from "guid-typescript";
 
-export default class Chat {
-  id: string = "";
+export default class Chat {;
+  id: string = Guid.createEmpty().toString();
   name: string = "";
   createdAt: Date = new Date();
   updatedAt: Date = new Date();
@@ -21,5 +22,9 @@ export default class Chat {
     chat.messages = data.messages.map(m => Message.fromApi(m));
 
     return chat;
+  }
+
+  get chatHasOnlyOneUser() {
+    return this.chatUserIds.length === 1;
   }
 }

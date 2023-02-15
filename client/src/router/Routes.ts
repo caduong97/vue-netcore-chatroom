@@ -4,6 +4,7 @@ import SignUp from "@/views/SignUp.vue";
 import Home from '@/views/Home.vue';
 import AuthStore from "@/store/AuthStore";
 import Profile from "@/views/Profile.vue";
+import ChatView from "@/views/Chat.vue";
 export class Routes {
 
   public static SignedInNavGuard: NavigationGuard<Vue> = (to: Route, from: Route, next: NavigationGuardNext) => {
@@ -32,6 +33,13 @@ export class Routes {
     name: "Profile",
     component: Profile
   }
+
+  public static Chat: RouteConfig = {
+    path: "chat/:chatId",
+    name: "Chat",
+    component: ChatView
+  }
+
     
   public static Home: RouteConfig = {
     path: "/",
@@ -39,10 +47,12 @@ export class Routes {
     beforeEnter: Routes.SignedInNavGuard,
     component: Home,
     children: [
-      Routes.MyProfile
+      Routes.MyProfile,
+      Routes.Chat
     ]
   }
 
+  
 
   
 }
