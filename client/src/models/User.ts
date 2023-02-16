@@ -60,4 +60,10 @@ export default class User {
     return firstNameInitial + lastNameInitial;
   }
 
+  get fullName(): string {
+    const firstName = this.firstName ?? "";
+    const lastName = this.lastName ?? "";
+
+    return `${firstName} ${lastName}`
+  }
 }

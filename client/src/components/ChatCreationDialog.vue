@@ -5,7 +5,8 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          New chat
+          <template v-if="updatingExistingChat">Edit chat</template>
+          <template v-else>New chat</template>
         </v-card-title>
 
         <v-card-text>
@@ -18,6 +19,23 @@
                   :rules="[formRules.nameRequired]"
                   :disabled="loading"
                 ></v-text-field>
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col cols="12">
+                <v-select
+                  @focus="onPeopleSelectionFocus"
+                  v-model="addedChatUserIds"
+                  :items="users"
+                  label="People"
+                  item-text="fullName"
+                  item-value="id"
+                  no-data-text="No people found"
+                  clearable
+                  :disabled="loading"
+                  multiple
+                ></v-select>
               </v-col>
             </v-row>
           </v-form>
@@ -35,11 +53,20 @@
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn
+            v-if="!updatingExistingChat"
             color="primary"
             text
             @click="createNewChat"
           >
             Create
+          </v-btn>
+          <v-btn
+            v-if="updatingExistingChat"
+            color="primary"
+            text
+            @click="saveChat"
+          >
+            Save
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -52,6 +79,7 @@ import User from "@/models/User";
 import AuthStore from "@/store/AuthStore";
 import ChatStore from "@/store/ChatStore";
 import UserStore from "@/store/UserStore";
+import { Guid } from "guid-typescript";
 import { Vue, Component } from "vue-property-decorator"
 
 @Component({
@@ -63,10 +91,23 @@ export default class ChatCreationDialog extends Vue {
   formRules: any = {
     nameRequired: (v: any) => !!v || 'Required',
   }
+  addedChatUserIds: string[] = []
   loading: boolean = false;
 
   get me(): User | null {
     return UserStore.me;
+  }
+
+  get users(): User[] {
+    return UserStore.users;
+  }
+
+  get chats(): Chat[] {
+    return ChatStore.chats;
+  }
+
+  get updatingExistingChat(): boolean {
+    return this.chat.id != Guid.createEmpty().toString();
   }
 
   async createNewChat() {
@@ -74,6 +115,7 @@ export default class ChatCreationDialog extends Vue {
       return
     }
 
+    this.loading = true;
     if (this.me) 
     {
       this.chat.chatUserIds.push(this.me.id);
@@ -81,15 +123,46 @@ export default class ChatCreationDialog extends Vue {
     try {
       await ChatStore.createOrUpdateChat(this.chat)
     } catch (error) {
-      
+      console.error("Error creating a new chat:", error)
     }
 
+    this.loading = false;
+
     this.chat = new Chat();
-    // this.chat.chatUserIds = []
     this.closeDialog();
   }
 
-  openDialog() {
+  async onPeopleSelectionFocus() {
+    if (this.users.length === 0) {
+      console.log("load people")
+      await UserStore.getAllUsers();
+    }
+  }
+
+  async saveChat() {
+    if (!(this.$refs.chatCreationForm as any).validate()) {
+      return
+    }
+
+    this.loading = true;
+    try {
+      this.chat.chatUserIds = [...this.addedChatUserIds]
+      await ChatStore.createOrUpdateChat(this.chat)
+    } catch (error) {
+      console.error("Error saving chat:", error)
+    }
+    this.loading = true;
+
+    this.chat = new Chat();
+    this.closeDialog();
+  }
+
+  openDialog(chatId: string | null) {
+    if (chatId) {
+      const chat = this.chats.find(c => c.id === chatId);
+      this.chat = chat ? Chat.fromApi(chat) : new Chat();
+      this.addedChatUserIds = [...this.chat.chatUserIds]
+    }
     this.dialog = true;
   }
 
@@ -104,7 +177,7 @@ export default class ChatCreationDialog extends Vue {
   }
 
   beforeDestroy() {
-    this.$root.$on("openCreateChatDialog", this.closeDialog)
+    this.$root.$off("openCreateChatDialog", this.closeDialog)
   }
 }
 </script>

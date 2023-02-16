@@ -37,6 +37,20 @@ namespace vue_netcore_chatroom.Controllers
             return Ok(user);
         }
 
+        [HttpGet("")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            ClaimsPrincipal claimsPrincipal = HttpContext.User;
+
+            var users = await _userService.GetAllUsers(claimsPrincipal);
+
+            List<UserDto> userDtos = users
+                .Select(u => UserDto.FromDbModel(u))
+                .ToList();
+
+            return Ok(userDtos);
+        }
+
         [HttpGet("Me")]
         public async Task<IActionResult> GetMe()
         {

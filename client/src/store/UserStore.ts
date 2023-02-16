@@ -23,6 +23,7 @@ if (store && store.state[name]) {
 export class UserStoreModule extends VuexModule implements IUserStoreState {
   static apiPath: string = "/user"
   me: User | null = null;
+  users: User[] = [];
   
   @Mutation
   private SIGN_IN_SSO(data: IUser) {
@@ -57,6 +58,30 @@ export class UserStoreModule extends VuexModule implements IUserStoreState {
     try {
       const response = await ApiService.get(path);
       this.GET_ME(response.data);
+    } catch (error) {
+      console.error(error);
+      alert("Error in getMe: " + error)
+    }
+  }
+
+
+  @Mutation
+  private GET_ALL_USERS(data: User[]) {
+    data.forEach(d => {
+      const user = this.users.find(u => u.id === d.id);
+      if (!user) {
+        this.users.push(User.fromApi(d));
+      }
+    })
+  }
+
+  @Action
+  public async getAllUsers() {
+    const path = UserStoreModule.apiPath;
+
+    try {
+      const response = await ApiService.get(path);
+      this.GET_ALL_USERS(response.data);
     } catch (error) {
       console.error(error);
       alert("Error in getMe: " + error)

@@ -47,9 +47,32 @@ namespace vue_netcore_chatroom.Services
             if (updatingChat)
             {
                 var existingChat = await _context.Chats
-                    .FindAsync(dto.Id);
+                    .Include(c => c.ChatUsers)
+                    .FirstOrDefaultAsync(c => c.Id == dto.Id);
                 if (existingChat == null)
                     throw new Exception("Error when updating chat. Chat with id is not found.");
+
+                existingChat.Name = dto.Name;
+
+                var usersToRemove = existingChat.ChatUsers
+                    .Where(cu => cu.UserId != null && !dto.ChatUserIds.Contains(cu.UserId.Value))
+                    .ToList();
+                var usersToAdd = dto.ChatUserIds
+                    .Where(cui => !existingChat.ChatUserIds.Contains(cui))
+                    .Select(cui => new ChatUser()
+                    {
+                        ChatId = existingChat.Id,
+                        UserId = cui
+                    })
+                    .ToList();
+
+                foreach(var chatUser in usersToRemove)
+                {
+                    existingChat.ChatUsers.Remove(chatUser);
+                }
+                
+                existingChat.ChatUsers.AddRange(usersToAdd);
+                await _context.SaveChangesAsync();
 
                 return existingChat;
             } else
