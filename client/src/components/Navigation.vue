@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-app-bar color="primary" app>
+    <v-app-bar color="primary" elevation="0" app>
       <v-app-bar-nav-icon @click="drawer = !drawer" dark></v-app-bar-nav-icon>
       <v-spacer></v-spacer>
       <v-menu offset-y left close-on-content-click transition="slide-y-transition" >
@@ -25,14 +25,14 @@
       </v-menu>
     </v-app-bar>
 
-    <v-navigation-drawer v-model="drawer" absolute app>
-      <v-list-item link to="/" style="height: 62px;">
+    <v-navigation-drawer v-model="drawer" absolute app :temporary="$vuetify.breakpoint.mdAndDown">
+      <v-list-item link to="/" :style="$vuetify.breakpoint.smAndDown ? 'height: 56px;': 'height: 64px;'">
         <v-list-item-icon>
           <v-icon size="28">mdi-home</v-icon>
         </v-list-item-icon>
-        <v-list-item-content >
+        <v-list-item-content  class="text-left">
           <v-list-item-title class="text-body-1">
-            Your rooms
+            Home
           </v-list-item-title>
           <!-- <v-list-item-subtitle>
             subtext
@@ -82,7 +82,6 @@ export default class Navigation extends Vue {
   get chats(): Chat[] {
     return ChatStore.chats;
   }
-
 
   async onSignOutClick() {
     if (AuthStore.msalAuthenticated) {
