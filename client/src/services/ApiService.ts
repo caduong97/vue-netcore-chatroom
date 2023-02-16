@@ -21,14 +21,14 @@ export class ApiService {
         accessToken = firebaseToken ? firebaseToken : accessToken;
       }
 
-      console.log("axios.interceptors.request access token", accessToken);
+      // console.log("axios.interceptors.request access token", accessToken);
 
       (config as any).headers["Authorization"] =  "Bearer " + accessToken
 
       return config;
     }, function (error: any) {
       // Do something with request error
-      console.log("axios.interceptors.request error", error)
+      // console.log("axios.interceptors.request error", error)
       return Promise.reject(error);
     });
 

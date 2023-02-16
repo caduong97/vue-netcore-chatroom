@@ -131,7 +131,7 @@ export class MsalPlugin implements PluginObject<IMsalPluginOptions> {
   * Gets a token silently, or falls back to interactive redirect. 
   */
   public async acquireToken() {
-    console.log("Calling MSALplugin acquireToken");
+    // console.log("Calling MSALplugin acquireToken");
     const apiAccessScope = "api://" + process.env.VUE_APP_MSAL_CLIENT_ID + "/access_as_user"
     const request = {
       account: this.msalInstance.getAllAccounts()[0],
@@ -139,7 +139,7 @@ export class MsalPlugin implements PluginObject<IMsalPluginOptions> {
     };
     try {
       const response = await this.msalInstance.acquireTokenSilent(request);
-      console.log("acquireToken response", response)
+      // console.log("acquireToken response", response)
       return response.accessToken;
     } catch (error) {
       console.log("catch acquireToken", error);
