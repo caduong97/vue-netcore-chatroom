@@ -46,7 +46,12 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
   @Mutation
   CREATE_OR_UPDATE_CHAT(data: Chat) {
-    
+    const chatIndex = this.chats.findIndex(c => c.id === data.id) 
+    if (chatIndex > -1) {
+      this.chats.splice(chatIndex, 1, Chat.fromApi(data));
+    } else {
+      this.chats.push(Chat.fromApi(data));
+    }
   }
 
   @Action

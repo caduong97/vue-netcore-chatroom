@@ -40,7 +40,9 @@ namespace vue_netcore_chatroom.Controllers
 
             Chat chat = await _chatService.CreateOrUpdateChat(dto);
 
-            return Ok();
+            ChatDto chatDto = ChatDto.FromDbModel(chat);
+
+            return Ok(chatDto);
         }
     }
 }
