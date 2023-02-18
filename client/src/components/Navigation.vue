@@ -42,20 +42,7 @@
 
       <v-divider></v-divider>
 
-      <v-list dense nav >
-        <v-list-item 
-          v-for="chat in chats" :key="chat.id" 
-          link
-          :to="{name: 'Chat', params: { chatId: chat.id} }"  
-        >
-          <v-list-item-icon>
-            <v-icon>mdi-chat</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content class="text-left">
-            <v-list-item-title>{{ chat.name }}</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
+      <ChatNavigation></ChatNavigation>
 
     </v-navigation-drawer>
   </div>
@@ -66,21 +53,19 @@ import { Vue, Component } from "vue-property-decorator";
 import User from '@/models/User';
 import AuthStore from '@/store/AuthStore';
 import UserStore from '@/store/UserStore';
-import ChatStore from "@/store/ChatStore";
-import Chat from "@/models/Chat";
+import ChatNavigation from "@/components/ChatNavigation.vue"
 
 @Component({
-  name: "Navigation"
+  name: "Navigation",
+  components: {
+    ChatNavigation
+  }
 })
 export default class Navigation extends Vue {
   drawer: boolean = true;
 
   get me(): User | null {
     return UserStore.me;
-  }
-
-  get chats(): Chat[] {
-    return ChatStore.chats;
   }
 
   async onSignOutClick() {
