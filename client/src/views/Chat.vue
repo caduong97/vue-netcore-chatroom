@@ -13,8 +13,6 @@
           @click="addPeopleToChat"
         >Add people to chat</v-btn>
       </v-row>
-
-      <ChatCreationDialog></ChatCreationDialog>
     </template>
 
     <template v-else></template>
@@ -23,12 +21,9 @@
 
 <script lang="ts">
 import Chat from "@/models/Chat";
-import User from "@/models/User";
-import AuthStore from "@/store/AuthStore";
 import ChatStore from "@/store/ChatStore";
-import UserStore from "@/store/UserStore";
 import { Vue, Component } from "vue-property-decorator"
-import ChatCreationDialog from "@/components/ChatCreationDialog.vue";
+import ChatCreationDialog, { ChatEditOnlyEnum } from "@/components/ChatCreationDialog.vue";
 
 @Component({
   name: "ChatView",
@@ -52,7 +47,7 @@ export default class ChatView extends Vue {
   }
 
   addPeopleToChat() {
-    this.$root.$emit("openCreateChatDialog", this.chatIdFromRouteParam)
+    this.$root.$emit("openCreateChatDialog", {chatId: this.chatIdFromRouteParam, editOnly: ChatEditOnlyEnum.ChatUsers})
   }
 }
 </script>

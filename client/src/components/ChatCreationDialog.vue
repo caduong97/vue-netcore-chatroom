@@ -5,25 +5,28 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          <template v-if="updatingExistingChat">Edit chat</template>
-          <template v-else>New chat</template>
+          <template v-if="!updatingExistingChat">New chat</template>
+          <template v-else-if="updatingExistingChat && editingOnlyChatName">Rename</template>
+          <template v-else-if="updatingExistingChat && editingOnlyChatUsers">Manage people</template>
+          <template v-else>Manage chat</template>
         </v-card-title>
 
         <v-card-text>
           <v-form ref="chatCreationForm">
             <v-row>
-              <v-col cols="12">
+              <v-col cols="12" class="pb-0">
                 <v-text-field
                   v-model="chat.name"
                   label="Name"
                   :rules="[formRules.nameRequired]"
                   :disabled="loading"
+                  :readonly="editingOnlyChatUsers"
                 ></v-text-field>
               </v-col>
             </v-row>
 
             <v-row>
-              <v-col cols="12">
+              <v-col cols="12" class="pt-0">
                 <v-select
                   @focus="onPeopleSelectionFocus"
                   v-model="addedChatUserIds"
@@ -32,8 +35,9 @@
                   item-text="fullName"
                   item-value="id"
                   no-data-text="No people found"
-                  clearable
                   :disabled="loading"
+                  :readonly="editingOnlyChatName"
+                  :clearable="!editingOnlyChatName"
                   multiple
                 ></v-select>
               </v-col>
@@ -82,6 +86,12 @@ import UserStore from "@/store/UserStore";
 import { Guid } from "guid-typescript";
 import { Vue, Component } from "vue-property-decorator"
 
+export enum ChatEditOnlyEnum {
+  None = 0,
+  ChatUsers,
+  ChatName
+}
+
 @Component({
   name: "ChatCreationDialog"
 })
@@ -92,7 +102,9 @@ export default class ChatCreationDialog extends Vue {
     nameRequired: (v: any) => !!v || 'Required',
   }
   addedChatUserIds: string[] = []
+  editOnly: ChatEditOnlyEnum = ChatEditOnlyEnum.None
   loading: boolean = false;
+
 
   get me(): User | null {
     return UserStore.me;
@@ -108,6 +120,14 @@ export default class ChatCreationDialog extends Vue {
 
   get updatingExistingChat(): boolean {
     return this.chat.id != Guid.createEmpty().toString();
+  }
+
+  get editingOnlyChatName(): boolean {
+    return this.editOnly !== null && this.editOnly === ChatEditOnlyEnum.ChatName;
+  }
+
+  get editingOnlyChatUsers(): boolean {
+    return this.editOnly !== null && this.editOnly === ChatEditOnlyEnum.ChatUsers;
   }
 
   async createNewChat() {
@@ -157,12 +177,15 @@ export default class ChatCreationDialog extends Vue {
     this.closeDialog();
   }
 
-  openDialog(chatId: string | null) {
-    if (chatId) {
-      const chat = this.chats.find(c => c.id === chatId);
+  openDialog(payload?: {chatId: string, editOnly: ChatEditOnlyEnum} ) {
+    if (payload != null) {
+      const chat = this.chats.find(c => c.id === payload.chatId);
       this.chat = chat ? Chat.fromApi(chat) : new Chat();
       this.addedChatUserIds = [...this.chat.chatUserIds]
-    }
+
+      this.editOnly = payload.editOnly;
+    } 
+
     this.dialog = true;
   }
 
@@ -182,6 +205,11 @@ export default class ChatCreationDialog extends Vue {
 }
 </script>
 
-<style>
+<style lang="scss">
 
+.v-input {
+  &--is-readonly {
+    opacity: 0.3;
+  }
+}
 </style>

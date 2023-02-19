@@ -7,6 +7,7 @@
     >
     <v-list-item 
       @click.stop="onChatClick(chat.id)"
+      :class="{'v-list-item--active': chatIdFromRouteParam === chat.id}"
     >
       <v-list-item-icon>
         <v-icon>mdi-chat</v-icon>
@@ -33,6 +34,7 @@ import Chat from "@/models/Chat";
 import ChatStore from "@/store/ChatStore";
 import { Vue, Component } from "vue-property-decorator";
 import MoreAction, { IMoreActionItem } from "@/components/MoreAction.vue"
+import { ChatEditOnlyEnum } from "./ChatCreationDialog.vue";
 
 @Component({
   name: "ChatNavigation",
@@ -42,7 +44,7 @@ import MoreAction, { IMoreActionItem } from "@/components/MoreAction.vue"
 })
 export default class ChatNavigation extends Vue {
   moreActionItems: IMoreActionItem[] = [
-    {id: "manageChatUsers", text: "Add people", disabled: false, dangerous: false},
+    {id: "manageChatUsers", text: "Manage people", disabled: false, dangerous: false},
     {id: "manageChatName", text: "Rename", disabled: false, dangerous: false}
   ]
   hover!: boolean;
@@ -52,19 +54,24 @@ export default class ChatNavigation extends Vue {
     return ChatStore.chats;
   }
 
+  get chatIdFromRouteParam(): string | null {
+    return this.$route.params ? this.$route.params.chatId : null
+  }
+
   getMoreActionItemById(id: string): IMoreActionItem | null {
     return this.moreActionItems.find(i => i.id == id) ?? null;
   }
 
   onChatClick(chatId: string) {
-    this.$router.push({name: 'Chat', params: { chatId: chatId} })
+    if (this.$route.name !== 'Chat' || this.$route.params.chatId !== chatId) {
+      this.$router.push({name: 'Chat', params: { chatId: chatId} })
+    }
   }
 
   onMoreActionToggled(opened: boolean) {
   }
 
   onMoreActionItemClicked(payload: {moreActionItemId: string, moreActionItemTarget: any}) {
-
     const clickedItem = this.getMoreActionItemById(payload.moreActionItemId);
     if (clickedItem == null) return
 
@@ -82,11 +89,14 @@ export default class ChatNavigation extends Vue {
   }
 
   onManageChatUsersClick(chatId: string) {
-    console.log("onManageChatUsersClick", chatId)
+    // console.log("onManageChatUsersClick", chatId)
+    this.$root.$emit("openCreateChatDialog", {chatId, editOnly: ChatEditOnlyEnum.ChatUsers})
+
   }
 
   onManageChatName(chatId: string) {
-    console.log("onManageChatName", chatId)
+    // console.log("onManageChatName", chatId)
+    this.$root.$emit("openCreateChatDialog", {chatId, editOnly: ChatEditOnlyEnum.ChatName})
   }
 }
 </script>

@@ -3,7 +3,7 @@
     <Navigation></Navigation>    
     <v-main>
       <v-container fluid class="d-flex align-center">
-        <template v-if="!chatIdFromRouteParam">
+        <template v-if="isAtRootRoute">
           <v-row>
             <v-btn 
               color="primary"
@@ -12,12 +12,12 @@
               @click="onCreateClick"
             >Create a chat</v-btn>
           </v-row>
-          <ChatCreationDialog></ChatCreationDialog>
         </template>
 
         <router-view></router-view>
       </v-container>
     </v-main>
+    <ChatCreationDialog></ChatCreationDialog>
   </div>
 </template>
 
@@ -47,8 +47,8 @@ export default class Home extends Vue {
     return ChatStore.chats;
   }
 
-  get chatIdFromRouteParam() {
-    return this.$route.params.chatId ?? null
+  get isAtRootRoute() {
+    return this.$route.name === "Home"
   }
 
   onCreateClick() {
