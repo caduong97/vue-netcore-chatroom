@@ -6,6 +6,7 @@ import vuetify from './plugins/vuetify'
 import { ApiService } from './services/ApiService'
 import { IMsalPluginOptions, MsalPlugin } from './plugins/msalPlugin'
 import { FirebaseAuthPlugin, IFirebaseAuthPluginOptions } from './plugins/firebaseAuthPlugin'
+import ChatHub from './hubs/ChatHub'
 
 Vue.config.productionTip = false
 
@@ -30,6 +31,8 @@ const firebaseConfig: IFirebaseAuthPluginOptions = {
 Vue.use(new FirebaseAuthPlugin(), firebaseConfig)
 
 ApiService.ConfigureInterceptors();
+
+Vue.use(ChatHub);
 
 new Vue({
   router,

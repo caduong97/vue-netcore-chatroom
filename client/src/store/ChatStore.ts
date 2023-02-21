@@ -1,6 +1,8 @@
 import AuthenticationRequest from "@/models/AuthenticationRequest";
 import AuthenticationResponse from "@/models/AuthenticationResponse";
 import Chat from "@/models/Chat";
+import { HubResponse } from "@/interfaces/HubResponse";
+import HubMethodHandler from "@/interfaces/HubMethodHandler";
 import RegisterPasswordUserRequest from "@/models/RegisterPasswordUserRequest";
 import { ApiService } from "@/services/ApiService";
 import { Module, VuexModule, Mutation, Action, getModule } from "vuex-module-decorators";
@@ -66,7 +68,16 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
     }
   }
   
+  @Action
+  sendMessage(data: HubResponse<string>) {
+    console.log("sendMessage",data)
+  }
 }
 
 const ChatStore = getModule(ChatStoreModule);
+
+export const chatHubMethodHandlers: HubMethodHandler[] = [
+  {name: "SendMessage", handler: ChatStore.sendMessage}
+]
+
 export default ChatStore;
