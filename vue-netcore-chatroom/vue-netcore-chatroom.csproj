@@ -17,6 +17,8 @@
     <None Remove="Microsoft.EntityFrameworkCore.Design" />
     <None Remove="Services\" />
     <None Remove="Helpers\" />
+    <None Remove="Microsoft.AspNetCore.SignalR" />
+    <None Remove="Hubs\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.4" />
@@ -28,11 +30,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="Services\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Hubs\" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Services\ChatService.json" />
