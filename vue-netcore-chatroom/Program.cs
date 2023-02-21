@@ -9,6 +9,8 @@ using Microsoft.Identity.Web;
 using Microsoft.Extensions.DependencyInjection;
 using vue_netcore_chatroom.Services;
 using System.Text;
+using Microsoft.Extensions.Options;
+using vue_netcore_chatroom.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 IConfiguration configuration = builder.Configuration;
@@ -55,6 +57,7 @@ builder.Services.AddAuthentication()
     })
     .AddMicrosoftIdentityWebApi(configuration, "AzureAd", "AzureAdAuth");
 
+builder.Services.AddSingleton<IPostConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -89,6 +92,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+
+builder.Services.AddSignalR(hubOptions =>
+{
+    hubOptions.EnableDetailedErrors = true;
+    hubOptions.KeepAliveInterval = TimeSpan.FromMinutes(1);
+    hubOptions.ClientTimeoutInterval = TimeSpan.FromMinutes(2);
+});
 
 var app = builder.Build();
 
@@ -133,7 +143,9 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapWhen(x => x.Request.Path.Value != null && !x.Request.Path.Value.StartsWith("/api"), builder =>
+app.MapHub<ChatHub>("/hubs/chat");
+
+app.MapWhen(x => x.Request.Path.Value != null && !x.Request.Path.Value.StartsWith("/api") && !x.Request.Path.Value.StartsWith("/hubs"), builder =>
 {
     builder.UseSpaStaticFiles();
 
