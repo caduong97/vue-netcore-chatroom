@@ -11,6 +11,7 @@ using vue_netcore_chatroom.Services;
 using System.Text;
 using Microsoft.Extensions.Options;
 using vue_netcore_chatroom.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 IConfiguration configuration = builder.Configuration;
@@ -99,6 +100,8 @@ builder.Services.AddSignalR(hubOptions =>
     hubOptions.KeepAliveInterval = TimeSpan.FromMinutes(1);
     hubOptions.ClientTimeoutInterval = TimeSpan.FromMinutes(2);
 });
+
+builder.Services.AddSingleton<IUserIdProvider, EmailBasedUserIdProvider>();
 
 var app = builder.Build();
 
