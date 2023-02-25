@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using vue_netcore_chatroom.Data;
+using vue_netcore_chatroom.Hubs;
 using vue_netcore_chatroom.Models;
 
 namespace vue_netcore_chatroom.Services
@@ -10,6 +12,7 @@ namespace vue_netcore_chatroom.Services
 	{
         Task<List<Chat>> GetChats(ClaimsPrincipal claimsPrincipal);
         Task<Chat> CreateOrUpdateChat(ChatDto dto);
+        Task<MessageDto> CreateMessage(MessageDto data, ClaimsPrincipal claimsPrincipal);
 
     }
 
@@ -18,11 +21,14 @@ namespace vue_netcore_chatroom.Services
 	{
         private readonly ApplicationDbContext _context;
         private readonly IUserService _userService;
+        private readonly IHubContext<ChatHub> _chatHub;
 
-        public ChatService (ApplicationDbContext context, IUserService userService)
+
+        public ChatService (ApplicationDbContext context, IUserService userService, IHubContext<ChatHub> chatHub)
         {
             _context = context;
             _userService = userService;
+            _chatHub = chatHub;
         }
 
         public async Task<List<Chat>> GetChats(ClaimsPrincipal claimsPrincipal)
@@ -30,7 +36,8 @@ namespace vue_netcore_chatroom.Services
             var user = await _userService.GetUserByClaimsPrincipal(claimsPrincipal);
 
             var chatsQuery = _context.Chats
-                .Include(c => c.ChatUsers);
+                .Include(c => c.ChatUsers)
+                .Include(c => c.Messages);
 
             List<Chat> chats = chatsQuery
                 .AsEnumerable()
@@ -92,6 +99,47 @@ namespace vue_netcore_chatroom.Services
                 return newChat;
             }
         }
+
+        public async Task<MessageDto> CreateMessage(MessageDto data, ClaimsPrincipal claimsPrincipal)
+        {
+            var chat = await _context.Chats
+                .Include(c => c.ChatUsers)
+                    .ThenInclude(cu => cu.User)
+                .FirstOrDefaultAsync(c => c.Id == data.SentToChatId);
+
+            if (chat == null)
+            {
+                throw new Exception("CreateMessage error: Cannot find chat.");
+            }
+
+            var chatUser = chat.ChatUsers
+                .First(cu => cu.UserId.HasValue && cu.UserId.Value == data.SentByUserId);
+
+            if (chatUser == null)
+            {
+                throw new Exception("CreateMessage error: Cannot find an existing chat user.");
+            }
+
+            Message newMessage = MessageDto.ToDbModel(data);
+            newMessage.SentByChatUserId = chatUser.Id;
+
+            _context.Add(newMessage);
+            await _context.SaveChangesAsync();
+
+            MessageDto messageDto = MessageDto.FromDbModel(newMessage);
+
+            var chatUserEmails = chat.ChatUsers
+               .Where(cu => cu.User != null)
+               .Select(cu => cu.User!.Email)
+               .ToList();
+
+            var hubResponse = new HubResponse<MessageDto>(messageDto);
+
+            await _chatHub.Clients.Users(chatUserEmails).SendAsync("BroadcastChatMessage", hubResponse);
+
+            return messageDto;
+        }
+
     }
 }
 

@@ -33,6 +33,20 @@ namespace vue_netcore_chatroom.Models
 
             return dto;
         }
+
+        public static Message ToDbModel(MessageDto dto)
+        {
+            var dbModel = new Message()
+            {
+                Id = dto.Id,
+                Text = dto.Text,
+                SentAt = DateTime.UtcNow,
+                ArchivedAt = null,
+                SentToChatId = dto.SentToChatId
+            };
+
+            return dbModel;
+        }
     }
 }
 

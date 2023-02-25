@@ -44,6 +44,27 @@ namespace vue_netcore_chatroom.Controllers
 
             return Ok(chatDto);
         }
+
+        //[HttpGet("ChatMessages")]
+        //public async Task<IActionResult> GetChatMessages([FromBody] request:)
+        //{
+        //    return Ok();
+        //}
+
+        [HttpPost("CreateMessage")]
+        public async Task<IActionResult> CreateMessage([FromBody] MessageDto data)
+        {
+            if (!ModelState.IsValid)
+            {
+                throw new Exception("CreateMessage error: ModelState is invalid.");
+            }
+
+            MessageDto messageDto = await _chatService.CreateMessage(data, HttpContext.User);
+
+            //MessageDto messageDto = MessageDto.FromDbModel(message);
+
+            return Ok(messageDto);
+        }
     }
 }
 
