@@ -16,9 +16,9 @@ export default {
   async acquireToken() {
     let token = ""
 
-    // if (AuthStore.googleAuthenticated) {
-    //    token = await firebaseAuthPluginInstance.getUserIdToken()
-    // }
+    if (AuthStore.googleAuthenticated) {
+      token = await firebaseAuthPluginInstance.getUserIdToken()
+    }
     if (AuthStore.msalAuthenticated) {
         const msalTokenResult = await msalPluginInstance.acquireToken();
         token = msalTokenResult ? msalTokenResult : ""
