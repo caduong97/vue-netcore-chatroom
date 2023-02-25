@@ -7,6 +7,7 @@ import RegisterPasswordUserRequest from "@/models/RegisterPasswordUserRequest";
 import { ApiService } from "@/services/ApiService";
 import { Module, VuexModule, Mutation, Action, getModule } from "vuex-module-decorators";
 import store from ".";
+import Message from "@/models/Message";
 
 export interface IChatStoreState {
 }
@@ -29,8 +30,8 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
   chats: Chat[] = [];
 
   @Mutation
-  private GET_CHATS(data: any) {
-    this.chats = data.map((d: any) => Chat.fromApi(d));
+  private GET_CHATS(payload: any) {
+    this.chats = payload.map((d: any) => Chat.fromApi(d));
   }
 
   @Action
@@ -38,7 +39,7 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
     const path = ChatStoreModule.apiPath;
     try {
       const response = await ApiService.get(path);
-      console.log("getchats", response.data)
+      // console.log("getchats", response.data)
       this.GET_CHATS(response.data)
     } catch (error) {
       console.error("Error when fetching chats:", error)
@@ -47,19 +48,19 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
   }
 
   @Mutation
-  CREATE_OR_UPDATE_CHAT(data: Chat) {
-    const chatIndex = this.chats.findIndex(c => c.id === data.id) 
+  CREATE_OR_UPDATE_CHAT(payload: Chat) {
+    const chatIndex = this.chats.findIndex(c => c.id === payload.id) 
     if (chatIndex > -1) {
-      this.chats.splice(chatIndex, 1, Chat.fromApi(data));
+      this.chats.splice(chatIndex, 1, Chat.fromApi(payload));
     } else {
-      this.chats.push(Chat.fromApi(data));
+      this.chats.push(Chat.fromApi(payload));
     }
   }
 
   @Action
   async createOrUpdateChat(payload: Chat) {
     const path = ChatStoreModule.apiPath + "/createOrUpdate";
-    console.log("createOrUpdateChat",path, payload)
+    // console.log("createOrUpdateChat",path, payload)
     try {
       const response = await ApiService.post<Chat>(path, payload);
       this.CREATE_OR_UPDATE_CHAT(response.data);
@@ -67,17 +68,47 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
       
     }
   }
+
+  @Action
+  async createMessage(payload: Message) {
+    const path = ChatStoreModule.apiPath + "/createMessage";
+
+    try {
+      // TODO: add to pending message list
+      const response = await ApiService.post<Chat>(path, payload);
+
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  @Action
+  broadcastChatMessage(hubResponse: HubResponse<Message>) {
+    console.log("broadcastChatMessage", hubResponse.data)
+    this.BOARDCAST_CHAT_MESSAGE(hubResponse.data);
+  }
+
+  @Mutation
+  BOARDCAST_CHAT_MESSAGE(payload: Message) {
+    const chat = this.chats.find(c => c.id === payload.sentToChatId);
+    if (!chat) {
+      return
+    }
+    chat.messages.push(Message.fromApi(payload));
+  }
+
   
   @Action
-  sendMessage(data: HubResponse<string>) {
-    console.log("sendMessage",data)
+  receiveMessage(hubResponse: HubResponse<string>) {
+    console.log(hubResponse)
   }
 }
 
 const ChatStore = getModule(ChatStoreModule);
 
 export const chatHubMethodHandlers: HubMethodHandler[] = [
-  {name: "SendMessage", handler: ChatStore.sendMessage}
+  {name: "ReceiveMessage", handler: ChatStore.receiveMessage},
+  {name: "BroadcastChatMessage", handler: ChatStore.broadcastChatMessage}
 ]
 
 export default ChatStore;
