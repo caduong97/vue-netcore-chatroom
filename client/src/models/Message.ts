@@ -1,5 +1,6 @@
 import UserStore from "@/store/UserStore";
 import User from "@/models/User";
+import moment from "moment";
 
 export default class Message {
   id: number = 0;
@@ -31,5 +32,13 @@ export default class Message {
 
   get outgoing(): boolean {
     return !this.incoming;
+  }
+
+  get sentDateFormatted() {
+    return moment(this.sentAt).format('ddd Do MMM hh:mm:ss')
+  }
+
+  get sentDateAsDay() {
+    return moment(this.sentAt).format('ddd Do MMM')
   }
  }

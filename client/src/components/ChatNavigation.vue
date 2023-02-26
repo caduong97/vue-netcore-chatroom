@@ -20,7 +20,7 @@
         :items="moreActionItems"
         :target="chat.id"
         :nudges="[6,17,0,0]"
-        :hovered="hover ? true : false"
+        :hovered="hover || $vuetify.breakpoint.mdAndDown ? true : false"
         @moreActionToggled="onMoreActionToggled"
         @moreActionItemClicked="onMoreActionItemClicked"
       ></MoreAction>

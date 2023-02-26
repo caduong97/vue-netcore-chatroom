@@ -1,17 +1,36 @@
 <template>
-  <v-sheet
-    :min-height="50" 
-    :min-width="80"
-    elevation="2"
-    rounded
+  <div 
+    class="message-item" 
     :class="{
       'message-item__incoming': message.incoming,
       'message-item__outgoing': message.outgoing
     }"
-    class="message-item d-flex align-center pa-3 mb-1"
   >
-    {{message.text}}
-  </v-sheet>
+    <v-sheet
+      :min-height="50" 
+      :min-width="80"
+      width="max-content"
+      elevation="2"
+      rounded
+      :color="message.incoming ? '#82BFFF' : '#fff'"
+      class="d-flex align-center pa-3 mb-1"
+      :class="{
+        'ml-auto': message.outgoing,
+        'mr-auto': message.incoming
+      }"
+      @click="showSentAtDate = !showSentAtDate"
+    >
+      {{message.text}}
+    </v-sheet>
+    <v-expand-transition>
+      <div class="text-caption" v-if="showSentAtDate">
+        {{ message.sentDateFormatted }}
+        <v-icon size="15">mdi-check</v-icon>
+      </div>
+
+    </v-expand-transition>
+  </div>
+  
 </template>
 
 <script lang="ts">
@@ -25,12 +44,13 @@ export default class MessageItem extends Vue {
   @Prop({ required: true })
   message!: Message;
 
-
+  showSentAtDate: boolean = false;
 }
 </script>
 
 <style lang="scss">
 .message-item {
+  cursor: pointer;
   &__outgoing {
     margin-left: auto;
   }

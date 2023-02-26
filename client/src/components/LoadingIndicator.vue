@@ -11,12 +11,20 @@
 
 <script lang="ts">
 import AuthStore from "@/store/AuthStore";
-import { Vue, Component } from "vue-property-decorator"
+import { Vue, Component, Prop } from "vue-property-decorator"
 
 @Component({
   name: "LoadingIndicator"
 })
 export default class LoadingIndicator extends Vue {
+
+  @Prop({ required: false, default: false})
+  loading!: false;
+
+  get show() {
+    return this.isAuthenticationRedirectInProgress || this.loading;
+  }
+
   get isAuthenticationRedirectInProgress(): boolean {
     return AuthStore.isAuthenticationRedirectInProgress;
   }

@@ -25,7 +25,7 @@
       </v-menu>
     </v-app-bar>
 
-    <v-navigation-drawer v-model="drawer" absolute app :temporary="$vuetify.breakpoint.mdAndDown">
+    <v-navigation-drawer v-model="drawer" app :temporary="$vuetify.breakpoint.mdAndDown">
       <v-list-item link to="/" :style="$vuetify.breakpoint.smAndDown ? 'height: 56px;': 'height: 64px;'">
         <v-list-item-icon>
           <v-icon size="28">mdi-home</v-icon>
@@ -62,7 +62,7 @@ import ChatNavigation from "@/components/ChatNavigation.vue"
   }
 })
 export default class Navigation extends Vue {
-  drawer: boolean = true;
+  drawer: boolean = false;
 
   get me(): User | null {
     return UserStore.me;
@@ -87,6 +87,12 @@ export default class Navigation extends Vue {
     }
 
     (window as any).location.href = window.location.origin;
+  }
+
+  created() {
+    if (this.$vuetify.breakpoint.lgAndUp) {
+      this.drawer = true;
+    }
   }
 }
 </script>

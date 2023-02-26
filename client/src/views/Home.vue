@@ -2,7 +2,7 @@
   <div>
     <Navigation></Navigation>    
     <v-main>
-      <v-container fluid class="d-flex align-center">
+      <v-container v-if="!loading" fluid class="d-flex align-center pa-0">
         <template v-if="isAtRootRoute">
           <v-row>
             <v-btn 
@@ -56,14 +56,19 @@ export default class Home extends Vue {
   }
   
   async fetchData() {
+    this.loading = true;
     if (this.chats.length === 0) {
       await ChatStore.getChats();
     }
+
+    this.loading = false;
   }
 
   async created() {
     await this.fetchData();
   }
+
+  
 
 }
 </script>
@@ -74,5 +79,10 @@ export default class Home extends Vue {
 }
 .v-main .container {
   height: 100%;
+}
+.row {
+  flex: unset;
+  width: 100%;
+  box-sizing: border-box;
 }
 </style>

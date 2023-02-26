@@ -1,7 +1,7 @@
 <template>
   <v-row class="pa-5">
     <v-col cols="12">
-      <h1>Welcome!</h1>
+      <h1 class="text-center">Welcome!</h1>
       <v-card elevation="3" max-width="500" class="profile-card">
         <v-card-title>My profile</v-card-title>
         <v-card-text>
