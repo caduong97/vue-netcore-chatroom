@@ -37,6 +37,7 @@ export default {
     const connection = new HubConnectionBuilder()
       .withUrl(hubUrl, options)
       .configureLogging(LogLevel.Information)
+      .withAutomaticReconnect()
       .build();
 
     connection.serverTimeoutInMilliseconds = 120000;
@@ -52,9 +53,18 @@ export default {
         })
     }
 
-    connection.onclose(() => this.start(connection))
+    connection.onclose(() => {
+      console.log("ChatHub connection onclose")
+      this.start(connection)
+    })
+
+    connection.onreconnecting(error => {
+      console.log('Reconnecting interval', error);
+    });
     
     vue.prototype.$projectHubInstance = this;
+
+    (window as any).signalR = connection;
     
     // TODO: Decide if start connection will be called later, 
     // due to the fact that the authentication can take longer, and this.start should wait until after user has authenticated

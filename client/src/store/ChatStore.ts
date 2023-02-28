@@ -97,6 +97,15 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
     chat.messages.push(Message.fromApi(payload));
   }
 
+  @Action
+  userJoinedChat(hubResponse: HubResponse<any>) {
+    console.log("userJoinedChat", hubResponse)
+  }
+
+  @Action
+  userLeftChat(hubResponse: HubResponse<any>) {
+    console.log("userLeftChat", hubResponse)
+  }
   
   @Action
   receiveMessage(hubResponse: HubResponse<string>) {
@@ -108,7 +117,10 @@ const ChatStore = getModule(ChatStoreModule);
 
 export const chatHubMethodHandlers: HubMethodHandler[] = [
   {name: "ReceiveMessage", handler: ChatStore.receiveMessage},
-  {name: "BroadcastChatMessage", handler: ChatStore.broadcastChatMessage}
+  {name: "BroadcastChatMessage", handler: ChatStore.broadcastChatMessage},
+  {name: "UserJoinedChat", handler: ChatStore.userJoinedChat},
+  {name: "UserLeftChat", handler: ChatStore.userLeftChat}
+
 ]
 
 export default ChatStore;

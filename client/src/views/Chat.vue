@@ -1,25 +1,43 @@
 <template>
   <v-container fluid class="d-flex align-center pa-0">
-    <template v-if="chat && chat.chatHasOnlyOneUser">
-      <v-row>
-        <v-col cols="12">
-          <div class="text-p1 text-center">There are no people in this chat</div>
-        </v-col>
-        <v-btn 
-          color="#1A237E"
-          elevation="4"
-          class="mx-auto"
-          dark
-          @click="addPeopleToChat"
-        >Add people to chat</v-btn>
-      </v-row>
-    </template>
+      <v-card color="#E3F2FD" height="100%" width="100%" tile class="d-flex flex-column align">
+        <v-card-text class="mt-auto d-flex flex-column-reverse chat-message-container" style="overflow-y: auto;">
+          <div v-for="key in groupedSortedMessagesByDayKeys" :key="key" class="d-flex flex-column-reverse">
+            <MessageItem 
+              v-for="(message, index) in groupedSortedMessagesByDay[key]" 
+              :key="index" 
+              :message="message"
+              />
+            <span class="chat-message-container__date">{{ key }}</span>
 
-    <template v-else>
-      <ChatConversation
-        :chat="chat"
-      />
-    </template>
+          </div>
+
+        </v-card-text>
+        
+        <v-card-actions style="background: #fff; height: 100px;" class="align-self-stretch">
+          <v-row class="pl-3" >
+            <v-col sm="11">
+              <v-text-field
+                placeholder="Type something"
+                hide-details
+                filled
+                outlined
+                v-model="message.text"
+                @keyup.enter="createMessage"
+              ></v-text-field>
+            </v-col>
+            
+            <v-col sm="1" class="d-flex">
+              <v-spacer></v-spacer>
+              <v-btn icon fab color="primary" @click="createMessage">
+                <v-icon size="30">
+                  mdi-send
+                </v-icon>
+                </v-btn>
+            </v-col>
+          </v-row>
+        </v-card-actions>
+      </v-card>
   </v-container>
 </template>
 
@@ -28,18 +46,28 @@ import Chat from "@/models/Chat";
 import ChatStore from "@/store/ChatStore";
 import { Vue, Component, Watch } from "vue-property-decorator"
 import ChatCreationDialog, { ChatEditOnlyEnum } from "@/components/ChatCreationDialog.vue";
-import ChatConversation from "@/components/ChatConversation.vue"
+import { NavigationGuardNext, Route } from "vue-router";
+import UserStore from "@/store/UserStore";
+import Message from "@/models/Message";
+import User from "@/models/User";
+import MessageItem from "@/components/Message.vue"
+
+Component.registerHooks([
+  "beforeRouteLeave",
+  "beforeRouteUpdate",
+  "beforeRouteEnter"
+])
 
 @Component({
   name: "ChatView",
   components: {
     ChatCreationDialog,
-    ChatConversation
+    MessageItem
   }
 })
 export default class ChatView extends Vue {
   loading: boolean = false;
-
+  message: Message = new Message();
 
   get chats(): Chat[] {
     return ChatStore.chats;
@@ -49,19 +77,55 @@ export default class ChatView extends Vue {
     return this.$route.params.chatId ?? null
   }
 
-  @Watch("chatIdFromRouteParam") 
-  onChatIdFromRouteChange() {
-    console.log("onChatIdFromRouteChange")
+  @Watch("chatIdFromRouteParam", { immediate: true }) 
+  onChatIdFromRouteChange(newVal: any, oldVal: any) {
+    if (newVal) {
+    }
+    if (oldVal) {
+    }
   }
-
+  
   get chat(): Chat | null {
     return this.chatIdFromRouteParam
       ? this.chats.find(c => c.id == this.chatIdFromRouteParam) ?? null
       : null;
   }
 
-  addPeopleToChat() {
-    this.$root.$emit("openCreateChatDialog", {chatId: this.chatIdFromRouteParam, editOnly: ChatEditOnlyEnum.ChatUsers})
+  get me(): User | null {
+    return UserStore.me;
+  }
+
+  get sortedMessages(): Message[] {
+    return this.chat
+      ? this.chat.messages.sort((a: Message, b: Message) => a.sentAt > b.sentAt ? -1 : 1)
+      : [];
+  }
+
+  get groupedSortedMessagesByDay() {
+    return this.sortedMessages.reduce((group: any, message: Message) => {
+      const { sentDateAsDay } = message;
+      group[sentDateAsDay] = group[sentDateAsDay] ?? [];
+      group[sentDateAsDay].push(message);
+      return group;
+    }, {})
+  }
+
+  get groupedSortedMessagesByDayKeys() {
+    return Object.keys(this.groupedSortedMessagesByDay);
+  }
+
+  async createMessage() {
+    this.message.sentAt = new Date();
+
+    await ChatStore.createMessage(this.message)
+
+    this.initMessage();
+  }
+
+  initMessage() {
+    this.message = new Message();
+    this.message.sentToChatId = this.chat!.id;
+    this.message.sentByUserId = this.me?.id ?? null;
   }
 
   initChat() {
@@ -70,8 +134,37 @@ export default class ChatView extends Vue {
     this.loading = false;
   }
 
-  created() {
-    console.log("created")
+  joinChat(chatId: string) {
+    console.log("Joining chat...", chatId)
+    this.$chatHub.connection.invoke("JoinChat", chatId)
+  }
+
+  leaveChat(chatId: string) {
+    if (this.chat && !this.chat.chatHasOnlyOneUser) {
+      console.log("Leaving chat...", chatId)
+      this.$chatHub.connection.invoke("LeaveChat", chatId)
+    }
+  }
+
+  beforeRouteEnter(to: Route, from: Route, next: NavigationGuardNext) {
+    next(vm => {
+      (vm as any).joinChat(to.params.chatId)
+    })
+
+  }
+
+  async beforeRouteLeave(to: Route, from: Route, next: NavigationGuardNext) {
+    this.leaveChat(from.params.chatId)
+    next()
+  }
+
+  beforeRouteUpdate(to: Route, from: Route, next: NavigationGuardNext) {
+    this.leaveChat(from.params.chatId);
+    this.joinChat(to.params.chatId)
+    next()
+  }
+
+  async created() {
   }
 }
 </script>
