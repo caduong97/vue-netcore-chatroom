@@ -1,5 +1,9 @@
 import Message from "./Message";
 import { Guid } from "guid-typescript";
+import ChatGroupConnectionMapping from "./ChatGroupConnectionMapping";
+import ChatStore from "@/store/ChatStore";
+import UserStore from "@/store/UserStore";
+import User from "./User";
 
 export default class Chat {;
   id: string = Guid.createEmpty().toString();
@@ -26,5 +30,17 @@ export default class Chat {;
 
   get chatHasOnlyOneUser() {
     return this.chatUserIds.length === 1;
+  }
+
+  get users(): User[] {
+    return UserStore.users.filter(u => this.chatUserIds.includes(u.id));
+  }
+
+  get chatGroupConnectionMappings(): ChatGroupConnectionMapping[] {
+    return ChatStore.chatGroupConnectionMappings.filter(cm => cm.chatId === this.id)
+  }
+
+  get availableInChatUsers(): User[] {
+    return this.users.filter(u => this.chatGroupConnectionMappings.map(cm => cm.email).includes(u.email));
   }
 }

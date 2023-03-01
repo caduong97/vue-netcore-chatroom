@@ -91,6 +91,14 @@ export default class ChatView extends Vue {
       : null;
   }
 
+  get chatGroupConnectionMappings() {
+    return this.chat ? this.chat.chatGroupConnectionMappings : []
+  }
+
+  get availableInChatUsers(): User[] {
+    return this.chat ? this.chat.availableInChatUsers : []
+  }
+
   get me(): User | null {
     return UserStore.me;
   }

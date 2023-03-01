@@ -14,7 +14,7 @@ namespace vue_netcore_chatroom.Services
         string EmailFromClaimsPrincipal(ClaimsPrincipal claimsPrincipal);
         Task<UserDto> CreateSsoUser(ClaimsPrincipal claimsPrincipal);
         Task<User> CreatePasswordUser(RegisterPasswordUserRequest request);
-        Task<List<User>> GetAllUsers(ClaimsPrincipal claimsPrincipal);
+        Task<List<User>> GetAllUsers();
         Task<UserDto> GetUserByClaimsPrincipal(ClaimsPrincipal claimsPrincipal);
         Task<User> GetUserByEmail(string email);
         Task<UserDto> UpdateUser(UserDto updatedUser);
@@ -149,14 +149,10 @@ namespace vue_netcore_chatroom.Services
             return user;
         }
 
-        public async Task<List<User>> GetAllUsers(ClaimsPrincipal claimsPrincipal)
+        public async Task<List<User>> GetAllUsers()
         {
-            var email = EmailFromClaimsPrincipal(claimsPrincipal);
-
-            var me = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
             var users = await _context.Users
-                .Where(u => u.Id != me.Id)
+                .Where(u => !u.Archived)
                 .ToListAsync();
 
             return users;

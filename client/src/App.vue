@@ -40,6 +40,7 @@ export default class App extends Vue {
   async fetchAllData() {
     if (AuthStore.isAuthenticated) {
       // await UserStore.getMe();
+      await UserStore.getAllUsers();
     }
   }
 
