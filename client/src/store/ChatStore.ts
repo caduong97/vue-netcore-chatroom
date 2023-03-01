@@ -8,6 +8,7 @@ import { ApiService } from "@/services/ApiService";
 import { Module, VuexModule, Mutation, Action, getModule } from "vuex-module-decorators";
 import store from ".";
 import Message from "@/models/Message";
+import ChatGroupConnectionMapping from "@/models/ChatGroupConnectionMapping";
 
 export interface IChatStoreState {
 }
@@ -28,6 +29,7 @@ if (store && store.state[name]) {
 export class ChatStoreModule extends VuexModule implements IChatStoreState {
   static apiPath = "/chat"
   chats: Chat[] = [];
+  chatGroupConnectionMappings: ChatGroupConnectionMapping[] = [];
 
   @Mutation
   private GET_CHATS(payload: any) {
@@ -98,13 +100,37 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
   }
 
   @Action
-  userJoinedChat(hubResponse: HubResponse<any>) {
-    console.log("userJoinedChat", hubResponse)
+  addChatGroupConnectionMappings(hubResponse: HubResponse<ChatGroupConnectionMapping[]>) {
+    this.ADD_CHAT_GROUP_CONNECTION_MAPPINGS(hubResponse.data);
+  }
+
+  @Mutation
+  ADD_CHAT_GROUP_CONNECTION_MAPPINGS(payload: ChatGroupConnectionMapping[]) {
+    // console.log("ADD_CHAT_GROUP_CONNECTION_MAPPINGS", payload)
+    payload.forEach(cm => {
+      const exisingConnectionMapping = this.chatGroupConnectionMappings
+        .find(cgcm => cgcm.chatId === cm.chatId && cgcm.connectionId === cm.connectionId && cm.email);
+      if (!exisingConnectionMapping) {
+        this.chatGroupConnectionMappings.push(cm);
+      }
+    })
   }
 
   @Action
-  userLeftChat(hubResponse: HubResponse<any>) {
-    console.log("userLeftChat", hubResponse)
+  removeChatGroupConnectionMappings(hubResponse: HubResponse<ChatGroupConnectionMapping[]>) {
+    this.REMOVE_CHAT_GROUP_CONNECTION_MAPPINGS(hubResponse.data)
+  }
+
+  @Mutation
+  REMOVE_CHAT_GROUP_CONNECTION_MAPPINGS(payload: ChatGroupConnectionMapping[]) {
+    // console.log("REMOVE_CHAT_GROUP_CONNECTION_MAPPINGS", payload)
+    payload.forEach(cm => {
+      const exisingConnectionMappingIndex = this.chatGroupConnectionMappings
+        .findIndex(cgcm => cgcm.chatId === cm.chatId && cgcm.connectionId === cm.connectionId && cm.email);
+      if (exisingConnectionMappingIndex > -1) {
+        this.chatGroupConnectionMappings.splice(exisingConnectionMappingIndex, 1)
+      }
+    })
   }
   
   @Action
@@ -118,8 +144,8 @@ const ChatStore = getModule(ChatStoreModule);
 export const chatHubMethodHandlers: HubMethodHandler[] = [
   {name: "ReceiveMessage", handler: ChatStore.receiveMessage},
   {name: "BroadcastChatMessage", handler: ChatStore.broadcastChatMessage},
-  {name: "UserJoinedChat", handler: ChatStore.userJoinedChat},
-  {name: "UserLeftChat", handler: ChatStore.userLeftChat}
+  {name: "AddChatGroupConnectionMappings", handler: ChatStore.addChatGroupConnectionMappings},
+  {name: "RemoveChatGroupConnectionMappings", handler: ChatStore.removeChatGroupConnectionMappings}
 
 ]
 

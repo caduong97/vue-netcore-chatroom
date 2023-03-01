@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net;
 using System.Threading.Channels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -57,20 +58,20 @@ namespace vue_netcore_chatroom.Hubs
                 // the user didn't exit the chat room(s) explicitly,
                 // because if they did, the connection mappings associated with them would have been removed.
                 // Meaning, the user is being reconnected after disconnected here.
-                if (existingConnectionMappings.Any())
-                {                  
-                    foreach (var cm in existingConnectionMappings)
-                    {
-                        // 1st, add user to group again after reconnected
-                        await Groups.AddToGroupAsync(Context.ConnectionId, cm.ChatId);
+                //if (existingConnectionMappings.Any())
+                //{                  
+                //    foreach (var cm in existingConnectionMappings)
+                //    {
+                //        // 1st, add user to group again after reconnected
+                //        await Groups.AddToGroupAsync(Context.ConnectionId, cm.ChatId);
 
-                        // 2nd, update the existing connection mapping with new connection id
-                        // Then, send updated connection mapping to clients of the same chat group
-                        cm.ConnectionId = Context.ConnectionId;
-                        var hubResponse = new HubResponse<ConnectionMapping>(cm);
-                        await Clients.Group(cm.ChatId).SendAsync("UserJoinedChat", hubResponse);
-                    }
-                }
+                //        // 2nd, update the existing connection mapping with new connection id
+                //        // Then, send updated connection mapping to clients of the same chat group
+                //        cm.ConnectionId = Context.ConnectionId;
+                //        var hubResponse = new HubResponse<ConnectionMapping>(cm);
+                //        await Clients.Group(cm.ChatId).SendAsync("UserJoinedChat", hubResponse);
+                //    }
+                //}
             }
             
 
@@ -102,8 +103,10 @@ namespace vue_netcore_chatroom.Hubs
             ConnectionMapping newConnectionMapping = new ConnectionMapping(Context.ConnectionId, user.Email, chatId);
             ChatGroupConnectionMappings.Add(newConnectionMapping);
 
-            var hubResponse = new HubResponse<ConnectionMapping>(newConnectionMapping);
-            await Clients.Group(chatId).SendAsync("UserJoinedChat", hubResponse);
+            var hubResponse = new HubResponse<List<ConnectionMapping>>(
+                ChatGroupConnectionMappings.Where(cm => cm.ChatId == chatId).ToList()
+            );
+            await Clients.Group(chatId).SendAsync("AddChatGroupConnectionMappings", hubResponse);
 
         }
 
@@ -119,18 +122,28 @@ namespace vue_netcore_chatroom.Hubs
             }
 
             UserDto user = await _userService.GetUserByClaimsPrincipal(Context.User!);
+
+            // Send hub response to caller to remove all connection mappings of the chat group they are exiting from
+            var hubResponseToCaller = new HubResponse<List<ConnectionMapping>>(
+                ChatGroupConnectionMappings.Where(cm => cm.ChatId == chatId).ToList()
+            );
+            await Clients.Caller.SendAsync("RemoveChatGroupConnectionMappings", hubResponseToCaller);
+
+            // Remove the connect mapping associate with this connection and chat id
             var removedConnectionMapping = ChatGroupConnectionMappings
                 .First(cm => cm.ConnectionId == Context.ConnectionId && cm.ChatId == chatId);
-
             if (removedConnectionMapping == null)
             {
                 throw new Exception("ChatHub LeaveChat method error. Cannot find existing connection mapping.");
             }
-
             ChatGroupConnectionMappings.Remove(removedConnectionMapping);
 
-            var hubResponse = new HubResponse<ConnectionMapping>(removedConnectionMapping);
-            await Clients.Group(chatId).SendAsync("UserLeftChat", hubResponse);
+            // Send hub response to group about the connection mappings to remove
+            var hubResponseToGroup = new HubResponse<List<ConnectionMapping>>(
+                new List<ConnectionMapping>() { removedConnectionMapping }
+            );
+            await Clients.Group(chatId).SendAsync("RemoveChatGroupConnectionMappings", hubResponseToGroup);
+            
         }
 
         private async Task<ChatUser> getChannelUser(HubCallerContext hubCallerContext, Guid chatId)
