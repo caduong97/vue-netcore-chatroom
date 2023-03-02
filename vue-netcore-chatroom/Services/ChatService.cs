@@ -11,6 +11,7 @@ namespace vue_netcore_chatroom.Services
 	public interface IChatService
 	{
         Task<List<Chat>> GetChats(ClaimsPrincipal claimsPrincipal);
+        Task<List<Message>> GetChatMessages(Guid chatId, int startingIndex);
         Task<Chat> CreateOrUpdateChat(ChatDto dto);
         Task<MessageDto> CreateMessage(MessageDto data, ClaimsPrincipal claimsPrincipal);
 
@@ -36,8 +37,7 @@ namespace vue_netcore_chatroom.Services
             var user = await _userService.GetUserByClaimsPrincipal(claimsPrincipal);
 
             var chatsQuery = _context.Chats
-                .Include(c => c.ChatUsers)
-                .Include(c => c.Messages);
+                .Include(c => c.ChatUsers);
 
             List<Chat> chats = chatsQuery
                 .AsEnumerable()
@@ -45,6 +45,23 @@ namespace vue_netcore_chatroom.Services
                 .ToList();
 
             return chats;
+        }
+
+        public async Task<List<Message>> GetChatMessages(Guid chatId, int startingIndex)
+        {
+            var chat = await _context.Chats.FindAsync(chatId);
+            if (chat == null)
+                throw new Exception("GetChatMessages error. Cannot find chat with id.");
+
+            var messages = await _context.Messages
+                .Where(m => !m.ArchivedAt.HasValue && m.SentToChatId == chatId)
+                .Include(m => m.SentBy)
+                .OrderByDescending(m => m.SentAt)
+                .ToListAsync();
+
+            var messagesStartingFromIndex = messages.Skip(startingIndex).Take(13).ToList();
+
+            return messagesStartingFromIndex;
         }
 
         public async Task<Chat> CreateOrUpdateChat(ChatDto dto)
