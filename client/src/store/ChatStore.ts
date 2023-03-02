@@ -31,10 +31,6 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
   chats: Chat[] = [];
   chatGroupConnectionMappings: ChatGroupConnectionMapping[] = [];
 
-  @Mutation
-  private GET_CHATS(payload: any) {
-    this.chats = payload.map((d: any) => Chat.fromApi(d));
-  }
 
   @Action
   async getChats() {
@@ -46,18 +42,38 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
     } catch (error) {
       console.error("Error when fetching chats:", error)
     }
-
   }
 
   @Mutation
-  CREATE_OR_UPDATE_CHAT(payload: Chat) {
-    const chatIndex = this.chats.findIndex(c => c.id === payload.id) 
-    if (chatIndex > -1) {
-      this.chats.splice(chatIndex, 1, Chat.fromApi(payload));
-    } else {
-      this.chats.push(Chat.fromApi(payload));
+  private GET_CHATS(payload: any) {
+    this.chats = payload.map((d: any) => Chat.fromApi(d));
+  }
+
+  @Action
+  async getChatMessages(payload: { chatId: string, startingIndex: number}) {
+    const path = `${ChatStoreModule.apiPath}/messages?chatId=${payload.chatId}&startingIndex=${payload.startingIndex}`;
+
+    try {
+      const response = await ApiService.get(path);
+      this.GET_CHAT_MESSAGES(response.data);
+    } catch (error) {
+      console.error(error);
     }
   }
+
+  @Mutation
+  GET_CHAT_MESSAGES(payload: Message[]) {
+    const chatId = payload.length > 0 ? payload[0].sentToChatId : null;
+    const chatToUpdate = this.chats.find(c => c.id === chatId) ?? null;
+    if (chatToUpdate) {
+      payload.forEach(mess => {
+        if (!chatToUpdate.messages.find(m => m.id === mess.id)) {
+          chatToUpdate.messages.push(Message.fromApi(mess))
+        }
+      });
+    }
+  }
+
 
   @Action
   async createOrUpdateChat(payload: Chat) {
@@ -68,6 +84,16 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
       this.CREATE_OR_UPDATE_CHAT(response.data);
     } catch (error) {
       
+    }
+  }
+
+  @Mutation
+  CREATE_OR_UPDATE_CHAT(payload: Chat) {
+    const chatIndex = this.chats.findIndex(c => c.id === payload.id) 
+    if (chatIndex > -1) {
+      this.chats.splice(chatIndex, 1, Chat.fromApi(payload));
+    } else {
+      this.chats.push(Chat.fromApi(payload));
     }
   }
 

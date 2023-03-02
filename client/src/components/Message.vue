@@ -23,7 +23,11 @@
       {{message.text}}
     </v-sheet>
     <v-expand-transition>
-      <div class="text-caption" v-if="showSentAtDate">
+      <div  
+        v-if="showSentAtDate"
+        class="text-caption ml-auto" 
+        style="width: auto;"
+      >
         {{ message.sentDateFormatted }}
         <v-icon size="15">mdi-check</v-icon>
       </div>

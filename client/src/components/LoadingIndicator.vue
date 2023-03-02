@@ -1,5 +1,5 @@
 <template>
-  <v-container v-if="isAuthenticationRedirectInProgress" class="loading-indicator">
+  <v-container v-if="show" class="loading-indicator">
     <v-progress-circular
       class="loading-indicator__progress-circular"
       :size="50"

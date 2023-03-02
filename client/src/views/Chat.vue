@@ -1,6 +1,7 @@
 <template>
   <v-container fluid class="d-flex align-center pa-0">
       <v-card color="#E3F2FD" height="100%" width="100%" tile class="d-flex flex-column align">
+        <LoadingIndicator :loading="loading"/>
         <v-card-text class="mt-auto d-flex flex-column-reverse chat-message-container" style="overflow-y: auto;">
           <div v-for="key in groupedSortedMessagesByDayKeys" :key="key" class="d-flex flex-column-reverse">
             <MessageItem 
@@ -51,6 +52,7 @@ import UserStore from "@/store/UserStore";
 import Message from "@/models/Message";
 import User from "@/models/User";
 import MessageItem from "@/components/Message.vue"
+import LoadingIndicator from "@/components/LoadingIndicator.vue"
 
 Component.registerHooks([
   "beforeRouteLeave",
@@ -62,7 +64,8 @@ Component.registerHooks([
   name: "ChatView",
   components: {
     ChatCreationDialog,
-    MessageItem
+    MessageItem,
+    LoadingIndicator
   }
 })
 export default class ChatView extends Vue {
@@ -78,11 +81,12 @@ export default class ChatView extends Vue {
   }
 
   @Watch("chatIdFromRouteParam", { immediate: true }) 
-  onChatIdFromRouteChange(newVal: any, oldVal: any) {
-    if (newVal) {
+  async onChatIdFromRouteChange(newVal: string | null, oldVal: string | null) {
+    if (newVal !== null && newVal !== oldVal) {
+      await this.initChat();
+      this.initMessage();
     }
-    if (oldVal) {
-    }
+    
   }
   
   get chat(): Chat | null {
@@ -125,6 +129,7 @@ export default class ChatView extends Vue {
   async createMessage() {
     this.message.sentAt = new Date();
 
+    console.log("create message", this.message)
     await ChatStore.createMessage(this.message)
 
     this.initMessage();
@@ -136,8 +141,12 @@ export default class ChatView extends Vue {
     this.message.sentByUserId = this.me?.id ?? null;
   }
 
-  initChat() {
+  async initChat() {
     this.loading = true;
+
+    if (this.chat && this.chat.messages.length === 0) {
+      await ChatStore.getChatMessages({chatId: this.chat.id, startingIndex: 0})
+    }
 
     this.loading = false;
   }
@@ -177,6 +186,13 @@ export default class ChatView extends Vue {
 }
 </script>
 
-<style>
+<style lang="scss">
+.chat-message-container {
+  height: calc(100vh - 100px - 64px);
 
+  &__date {
+    // width: 100%;
+    margin: auto;
+  }
+}
 </style>
