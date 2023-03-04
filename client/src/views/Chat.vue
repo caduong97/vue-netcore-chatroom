@@ -136,7 +136,7 @@ export default class ChatView extends Vue {
   async initChat() {
     this.loading = true;
 
-    if (this.chat && this.chat.messages.length === 0) {
+    if (this.chat && this.chat.messages.length < ChatStore.defaultMessageAmount) {
       await ChatStore.getChatMessages({chatId: this.chat.id, startingIndex: 0})
     }
 

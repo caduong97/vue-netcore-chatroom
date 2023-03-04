@@ -33,9 +33,9 @@ namespace vue_netcore_chatroom.Controllers
         }
 
         [HttpGet("Messages")]
-        public async Task<IActionResult> GetChatMessages([FromQuery] Guid chatId, int startingIndex)
+        public async Task<IActionResult> GetChatMessages([FromQuery] Guid chatId, int startingIndex, int amount)
         {
-            var messages = await _chatService.GetChatMessages(chatId, startingIndex);
+            var messages = await _chatService.GetChatMessages(chatId, startingIndex, amount);
 
             List<MessageDto> messageDtos = messages.Select(m => MessageDto.FromDbModel(m)).ToList();
 

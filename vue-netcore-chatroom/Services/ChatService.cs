@@ -11,7 +11,7 @@ namespace vue_netcore_chatroom.Services
 	public interface IChatService
 	{
         Task<List<Chat>> GetChats(ClaimsPrincipal claimsPrincipal);
-        Task<List<Message>> GetChatMessages(Guid chatId, int startingIndex);
+        Task<List<Message>> GetChatMessages(Guid chatId, int startingIndex, int amount);
         Task<Chat> CreateOrUpdateChat(ChatDto dto);
         Task<MessageDto> CreateMessage(MessageDto data, ClaimsPrincipal claimsPrincipal);
 
@@ -47,7 +47,7 @@ namespace vue_netcore_chatroom.Services
             return chats;
         }
 
-        public async Task<List<Message>> GetChatMessages(Guid chatId, int startingIndex)
+        public async Task<List<Message>> GetChatMessages(Guid chatId, int startingIndex, int amount)
         {
             var chat = await _context.Chats.FindAsync(chatId);
             if (chat == null)
@@ -59,7 +59,7 @@ namespace vue_netcore_chatroom.Services
                 .OrderByDescending(m => m.SentAt)
                 .ToListAsync();
 
-            var messagesStartingFromIndex = messages.Skip(startingIndex).Take(13).ToList();
+            var messagesStartingFromIndex = messages.Skip(startingIndex).Take(amount).ToList();
 
             return messagesStartingFromIndex;
         }

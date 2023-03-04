@@ -29,6 +29,7 @@ if (store && store.state[name]) {
 @Module({ dynamic: true, store: store, name: 'chat' })
 export class ChatStoreModule extends VuexModule implements IChatStoreState {
   static apiPath = "/chat"
+  defaultMessageAmount = 13;
   chats: Chat[] = [];
   chatHubConnectionMappings: HubConnectionMapping[] = [];
 
@@ -52,7 +53,7 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
   @Action
   async getChatMessages(payload: { chatId: string, startingIndex: number}) {
-    const path = `${ChatStoreModule.apiPath}/messages?chatId=${payload.chatId}&startingIndex=${payload.startingIndex}`;
+    const path = `${ChatStoreModule.apiPath}/messages?chatId=${payload.chatId}&startingIndex=${payload.startingIndex}&amount=${ChatStore.defaultMessageAmount}`;
 
     try {
       const response = await ApiService.get(path);
