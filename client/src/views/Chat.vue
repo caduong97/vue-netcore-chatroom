@@ -3,6 +3,22 @@
       <v-card color="#E3F2FD" height="100%" width="100%" tile class="d-flex flex-column align">
         <LoadingIndicator :loading="loading"/>
         <v-card-text class="mt-auto d-flex flex-column-reverse chat-message-container" style="overflow-y: auto;">
+          <v-slide-y-reverse-transition>
+            <v-sheet
+              v-if="chat.messageIncoming"
+              :min-height="35" 
+              :min-width="80"
+              width="max-content"
+              elevation="1"
+              rounded
+              color="#a6d1ff"
+              class="d-flex align-center justify-center pa-3"
+            >
+              <div class="dot-typing"></div>
+
+            </v-sheet>
+          </v-slide-y-reverse-transition>
+          
           <div v-for="key in groupedSortedMessagesByDayKeys" :key="key" class="d-flex flex-column-reverse">
             <MessageItem 
               v-for="(message, index) in groupedSortedMessagesByDay[key]" 
@@ -19,12 +35,15 @@
           <v-row class="pl-3" >
             <v-col sm="11">
               <v-text-field
+                ref="messageInputRef"
                 placeholder="Type something"
                 hide-details
                 filled
                 outlined
                 v-model="message.text"
                 @keyup.enter="createMessage"
+                @focus="onChatInputFocus"
+                @blur="onChatInputBlur"
               ></v-text-field>
             </v-col>
             
@@ -89,10 +108,8 @@ export default class ChatView extends Vue {
     
   }
   
-  get chat(): Chat | null {
-    return this.chatIdFromRouteParam
-      ? this.chats.find(c => c.id == this.chatIdFromRouteParam) ?? null
-      : null;
+  get chat(): Chat  {
+    return this.chats.find(c => c.id == this.chatIdFromRouteParam) ?? new Chat()
   }
 
   get me(): User | null {
@@ -100,9 +117,7 @@ export default class ChatView extends Vue {
   }
 
   get sortedMessages(): Message[] {
-    return this.chat
-      ? this.chat.messages.sort((a: Message, b: Message) => a.sentAt > b.sentAt ? -1 : 1)
-      : [];
+    return this.chat.messages.sort((a: Message, b: Message) => a.sentAt > b.sentAt ? -1 : 1);
   }
 
   get groupedSortedMessagesByDay() {
@@ -121,8 +136,10 @@ export default class ChatView extends Vue {
   async createMessage() {
     this.message.sentAt = new Date();
 
-    console.log("create message", this.message)
-    await ChatStore.createMessage(this.message)
+    console.log("create message", this.message);
+    (this.$refs as any).messageInputRef.blur(); 
+
+    await ChatStore.createMessage(this.message);
 
     this.initMessage();
   }
@@ -136,11 +153,19 @@ export default class ChatView extends Vue {
   async initChat() {
     this.loading = true;
 
-    if (this.chat && this.chat.messages.length < ChatStore.defaultMessageAmount) {
+    if (this.chat.messages.length < ChatStore.defaultMessageAmount) {
       await ChatStore.getChatMessages({chatId: this.chat.id, startingIndex: 0})
     }
 
     this.loading = false;
+  }
+
+  onChatInputFocus() {
+    this.$chatHub.connection.invoke("OnMessageInputFocus", this.chat.id)
+  }
+
+  onChatInputBlur() {
+    this.$chatHub.connection.invoke("OnMessageInputBlur", this.chat.id)
   }
 
   // joinChat(chatId: string) {
@@ -185,6 +210,43 @@ export default class ChatView extends Vue {
   &__date {
     // width: 100%;
     margin: auto;
+  }
+}
+
+.dot-typing {
+  position: relative;
+  left: -9999px;
+  width: 8px;
+  height: 8px;
+  // margin: auto auto auto 20px;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #fff;
+  box-shadow: 9984px 0 0 0 #fff, 9999px 0 0 0 #fff, 10014px 0 0 0 #fff;
+  animation: dot-typing 1.5s infinite linear;
+}
+
+@keyframes dot-typing {
+  0% {
+    box-shadow: 9984px 0 0 0 #fff, 9999px 0 0 0 #fff, 10014px 0 0 0 #fff;
+  }
+  16.667% {
+    box-shadow: 9984px -10px 0 0 #fff, 9999px 0 0 0 #fff, 10014px 0 0 0 #fff;
+  }
+  33.333% {
+    box-shadow: 9984px 0 0 0 #fff, 9999px 0 0 0 #fff, 10014px 0 0 0 #fff;
+  }
+  50% {
+    box-shadow: 9984px 0 0 0 #fff, 9999px -10px 0 0 #fff, 10014px 0 0 0 #fff;
+  }
+  66.667% {
+    box-shadow: 9984px 0 0 0 #fff, 9999px 0 0 0 #fff, 10014px 0 0 0 #fff;
+  }
+  83.333% {
+    box-shadow: 9984px 0 0 0 #fff, 9999px 0 0 0 #fff, 10014px -10px 0 0 #fff;
+  }
+  100% {
+    box-shadow: 9984px 0 0 0 #fff, 9999px 0 0 0 #fff, 10014px 0 0 0 #fff;
   }
 }
 </style>

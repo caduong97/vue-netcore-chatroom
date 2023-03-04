@@ -160,6 +160,20 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
       }
     })
   }
+
+  @Action
+  updateMessagingStatus(hubResponse: HubResponse<{chatId: string, incoming: boolean}>) {
+    this.UPDATE_MESSAGING_STATUS(hubResponse.data);
+  }
+
+  @Mutation
+  UPDATE_MESSAGING_STATUS(payload: {chatId: string, incoming: boolean}) {
+    // console.log("UPDATE_MESSAGING_STATUS", payload)
+    const chat = this.chats.find(c => c.id === payload.chatId);
+    if (chat) {
+      chat.messageIncoming = payload.incoming
+    }
+  }
   
   @Action
   receiveMessage(hubResponse: HubResponse<string>) {
@@ -173,8 +187,8 @@ export const chatHubMethodHandlers: HubMethodHandler[] = [
   {name: "ReceiveMessage", handler: ChatStore.receiveMessage},
   {name: "BroadcastChatMessage", handler: ChatStore.broadcastChatMessage},
   {name: "AddConnectionMappings", handler: ChatStore.addConnectionMappings},
-  {name: "RemoveConnectionMappings", handler: ChatStore.removeConnectionMappings}
-
+  {name: "RemoveConnectionMappings", handler: ChatStore.removeConnectionMappings},
+  {name: "UpdateMessagingStatus", handler: ChatStore.updateMessagingStatus}
 ]
 
 export default ChatStore;

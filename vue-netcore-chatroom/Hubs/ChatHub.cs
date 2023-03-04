@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using vue_netcore_chatroom.Data;
 using vue_netcore_chatroom.Models;
 using vue_netcore_chatroom.Services;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace vue_netcore_chatroom.Hubs
 {
@@ -21,6 +22,19 @@ namespace vue_netcore_chatroom.Hubs
         {
             ConnectionId = connectionId;
             Email = email;
+        }
+    }
+
+    public class MessagingStatus
+    {
+        public Guid ChatId { get; set; }
+
+        public bool Incoming { get; set; }
+
+        public MessagingStatus(Guid chatId, bool incoming)
+        {
+            ChatId = chatId;
+            Incoming = incoming;
         }
     }
 
@@ -97,6 +111,24 @@ namespace vue_netcore_chatroom.Hubs
 
             await Clients.Caller.SendAsync("ReceiveMessage", "ChatHub disconnected");
             await base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task OnMessageInputFocus(Guid chatId)
+        {
+            var hubResponse = new HubResponse<MessagingStatus>(
+                new MessagingStatus(chatId, true)
+            );
+
+            await Clients.OthersInGroup(chatId.ToString()).SendAsync("UpdateMessagingStatus", hubResponse);
+        }
+
+        public async Task OnMessageInputBlur(Guid chatId)
+        {
+            var hubResponse = new HubResponse<MessagingStatus>(
+                new MessagingStatus(chatId, false)
+            );
+
+            await Clients.OthersInGroup(chatId.ToString()).SendAsync("UpdateMessagingStatus", hubResponse);
         }
 
         public async Task SendMessage(string user, string message)

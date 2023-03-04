@@ -16,6 +16,8 @@ export default class Chat {;
   // to avoid the need to map messages to chats on the frontend, which can lead to perf issue.
   messages: Message[] = [];
 
+  messageIncoming: boolean = false;
+
   public static fromApi(data: Chat) {
     const chat = new Chat();
     chat.id = data.id;
