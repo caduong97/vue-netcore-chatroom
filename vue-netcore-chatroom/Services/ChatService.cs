@@ -145,14 +145,10 @@ namespace vue_netcore_chatroom.Services
 
             MessageDto messageDto = MessageDto.FromDbModel(newMessage);
 
-            var chatUserEmails = chat.ChatUsers
-               .Where(cu => cu.User != null)
-               .Select(cu => cu.User!.Email)
-               .ToList();
 
             var hubResponse = new HubResponse<MessageDto>(messageDto);
 
-            await _chatHub.Clients.Users(chatUserEmails).SendAsync("BroadcastChatMessage", hubResponse);
+            await _chatHub.Clients.Group(chat.Id.ToString()).SendAsync("BroadcastChatMessage", hubResponse);
 
             return messageDto;
         }

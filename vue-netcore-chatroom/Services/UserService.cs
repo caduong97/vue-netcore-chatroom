@@ -15,7 +15,7 @@ namespace vue_netcore_chatroom.Services
         Task<UserDto> CreateSsoUser(ClaimsPrincipal claimsPrincipal);
         Task<User> CreatePasswordUser(RegisterPasswordUserRequest request);
         Task<List<User>> GetAllUsers();
-        Task<UserDto> GetUserByClaimsPrincipal(ClaimsPrincipal claimsPrincipal);
+        Task<User> GetUserByClaimsPrincipal(ClaimsPrincipal claimsPrincipal);
         Task<User> GetUserByEmail(string email);
         Task<UserDto> UpdateUser(UserDto updatedUser);
 
@@ -159,18 +159,20 @@ namespace vue_netcore_chatroom.Services
         }
 
 
-        public async Task<UserDto> GetUserByClaimsPrincipal(ClaimsPrincipal claimsPrincipal)
+        public async Task<User> GetUserByClaimsPrincipal(ClaimsPrincipal claimsPrincipal)
         {
             var email = EmailFromClaimsPrincipal(claimsPrincipal);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var user = await _context.Users
+                .Include(u => u.ChatUsers)
+                .FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null)
             {
                 throw new Exception("Cannot find user by claims principal");
             }
 
-            return UserDto.FromDbModel(user);
+            return user;
         }
 
         public async Task<User> GetUserByEmail(string email)

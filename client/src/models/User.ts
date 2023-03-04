@@ -1,3 +1,5 @@
+import HubConnectionMapping from "@/interfaces/HubConnectionMapping";
+import ChatStore from "@/store/ChatStore";
 
 export interface IUser {
   id: string;
@@ -65,5 +67,13 @@ export default class User {
     const lastName = this.lastName ?? "";
 
     return `${firstName} ${lastName}`
+  }
+
+  get userChatHubConnectionMappings(): HubConnectionMapping[] {
+    return ChatStore.chatHubConnectionMappings.filter(cm => cm.email === this.email);
+  }
+
+  get userIsOnline(): boolean {
+    return this.userChatHubConnectionMappings.length > 0;
   }
 }

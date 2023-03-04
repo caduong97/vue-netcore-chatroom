@@ -95,14 +95,6 @@ export default class ChatView extends Vue {
       : null;
   }
 
-  get chatGroupConnectionMappings() {
-    return this.chat ? this.chat.chatGroupConnectionMappings : []
-  }
-
-  get availableInChatUsers(): User[] {
-    return this.chat ? this.chat.availableInChatUsers : []
-  }
-
   get me(): User | null {
     return UserStore.me;
   }
@@ -151,35 +143,35 @@ export default class ChatView extends Vue {
     this.loading = false;
   }
 
-  joinChat(chatId: string) {
-    console.log("Joining chat...", chatId)
-    this.$chatHub.connection.invoke("JoinChat", chatId)
-  }
+  // joinChat(chatId: string) {
+  //   console.log("Joining chat...", chatId)
+  //   this.$chatHub.connection.invoke("JoinChat", chatId)
+  // }
 
-  leaveChat(chatId: string) {
-    if (this.chat && !this.chat.chatHasOnlyOneUser) {
-      console.log("Leaving chat...", chatId)
-      this.$chatHub.connection.invoke("LeaveChat", chatId)
-    }
-  }
+  // leaveChat(chatId: string) {
+  //   if (this.chat && !this.chat.chatHasOnlyOneUser) {
+  //     console.log("Leaving chat...", chatId)
+  //     this.$chatHub.connection.invoke("LeaveChat", chatId)
+  //   }
+  // }
 
-  beforeRouteEnter(to: Route, from: Route, next: NavigationGuardNext) {
-    next(vm => {
-      (vm as any).joinChat(to.params.chatId)
-    })
+  // beforeRouteEnter(to: Route, from: Route, next: NavigationGuardNext) {
+  //   next(vm => {
+  //     (vm as any).joinChat(to.params.chatId)
+  //   })
 
-  }
+  // }
 
-  async beforeRouteLeave(to: Route, from: Route, next: NavigationGuardNext) {
-    this.leaveChat(from.params.chatId)
-    next()
-  }
+  // async beforeRouteLeave(to: Route, from: Route, next: NavigationGuardNext) {
+  //   this.leaveChat(from.params.chatId)
+  //   next()
+  // }
 
-  beforeRouteUpdate(to: Route, from: Route, next: NavigationGuardNext) {
-    this.leaveChat(from.params.chatId);
-    this.joinChat(to.params.chatId)
-    next()
-  }
+  // beforeRouteUpdate(to: Route, from: Route, next: NavigationGuardNext) {
+  //   this.leaveChat(from.params.chatId);
+  //   this.joinChat(to.params.chatId)
+  //   next()
+  // }
 
   async created() {
   }

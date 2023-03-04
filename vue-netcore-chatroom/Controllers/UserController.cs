@@ -56,7 +56,9 @@ namespace vue_netcore_chatroom.Controllers
 
             var user = await _userService.GetUserByClaimsPrincipal(claimsPrincipal);
 
-            return Ok(user);
+            var userDto = UserDto.FromDbModel(user);
+
+            return Ok(userDto);
         }
 
         [HttpPost("Update")]
