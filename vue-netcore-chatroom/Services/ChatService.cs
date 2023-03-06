@@ -141,18 +141,42 @@ namespace vue_netcore_chatroom.Services
             newMessage.SentByChatUserId = chatUser.Id;
 
             _context.Add(newMessage);
-            await _context.SaveChangesAsync();
+            var success = await _context.SaveChangesAsync() > 0;
+
+            if (!success)
+            //if (success)
+            {
+                var failedToSaveMessage = new MessageDto()
+                {
+                    Id = data.Id,
+                    PendingId = data.PendingId,
+                    Text = data.Text,
+                    SentAt = data.SentAt,
+                    SentByUserId = data.SentByUserId,
+                    SentToChatId = data.SentToChatId,
+                    SavingStatus = MessageSavingStatusEnum.Failed
+                };
+                var email = _userService.EmailFromClaimsPrincipal(claimsPrincipal);
+                var hubResponseToCaller = new HubResponse<MessageDto>(failedToSaveMessage);
+
+                await _chatHub.Clients.User(email).SendAsync("ShowFailedChatMessageToSender", hubResponseToCaller);
+
+                return data;
+            }
 
             MessageDto messageDto = MessageDto.FromDbModel(newMessage);
-
-
+            messageDto.PendingId = data.PendingId;
             var hubResponse = new HubResponse<MessageDto>(messageDto);
 
+            // TODO: handle exception
             await _chatHub.Clients.Group(chat.Id.ToString()).SendAsync("BroadcastChatMessage", hubResponse);
+
+
 
             return messageDto;
         }
 
+        
     }
 }
 

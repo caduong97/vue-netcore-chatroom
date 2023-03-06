@@ -16,8 +16,11 @@ namespace vue_netcore_chatroom.Models
         // Id of the User, not the ChatUser
         public Guid? SentByUserId { get; set; }
 
-        // NOTE: this is not needed on the frontend, consider removing
         public Guid SentToChatId { get; set; }
+
+        public Guid? PendingId { get; set; }
+
+        public MessageSavingStatusEnum SavingStatus { get; set; }
 
         public static MessageDto FromDbModel(Message dbModel)
         {
@@ -47,6 +50,13 @@ namespace vue_netcore_chatroom.Models
 
             return dbModel;
         }
+    }
+
+    public enum MessageSavingStatusEnum
+    {
+        Success = 0,
+        Pending,
+        Failed
     }
 }
 

@@ -19,12 +19,13 @@
             </v-sheet>
           </v-slide-y-reverse-transition>
           
-          <div v-for="key in groupedSortedMessagesByDayKeys" :key="key" class="d-flex flex-column-reverse">
+          <div v-for="key in groupedSortedMessagesByDayKeys" :key="key" class="d-flex flex-column-reverse mt-8 mb-4">
             <MessageItem 
               v-for="(message, index) in groupedSortedMessagesByDay[key]" 
               :key="index" 
               :message="message"
-              />
+              @messageRetry="recreateMessage(message)"
+            />
             <span class="chat-message-container__date">{{ key }}</span>
 
           </div>
@@ -68,10 +69,11 @@ import { Vue, Component, Watch } from "vue-property-decorator"
 import ChatCreationDialog, { ChatEditOnlyEnum } from "@/components/ChatCreationDialog.vue";
 import { NavigationGuardNext, Route } from "vue-router";
 import UserStore from "@/store/UserStore";
-import Message from "@/models/Message";
+import Message, { MessageSavingStatusEnum } from "@/models/Message";
 import User from "@/models/User";
 import MessageItem from "@/components/Message.vue"
 import LoadingIndicator from "@/components/LoadingIndicator.vue"
+import { Guid } from "guid-typescript";
 
 Component.registerHooks([
   "beforeRouteLeave",
@@ -135,13 +137,26 @@ export default class ChatView extends Vue {
 
   async createMessage() {
     this.message.sentAt = new Date();
+    this.message.pendingId = Guid.create().toString();
 
-    console.log("create message", this.message);
     (this.$refs as any).messageInputRef.blur(); 
-
+    // console.log("create message", this.message);
     await ChatStore.createMessage(this.message);
 
     this.initMessage();
+  }
+
+  async recreateMessage(message: Message) {
+    const newMessage = new Message();
+    newMessage.text = message.text;
+    newMessage.sentByUserId = message.sentByUserId;
+    newMessage.sentToChatId = message.sentToChatId;
+    newMessage.pendingId = message.pendingId;
+    newMessage.savingStatus = MessageSavingStatusEnum.Pending
+
+    // console.log("recreateMessage", message, newMessage)
+
+    await ChatStore.createMessage(newMessage);
   }
 
   initMessage() {

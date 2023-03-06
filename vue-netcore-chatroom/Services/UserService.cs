@@ -46,7 +46,7 @@ namespace vue_netcore_chatroom.Services
             return email;
         }
 
-        private string FirstNameFromClaimsPrincipal(ClaimsPrincipal claimsPrincipal)
+        public string FirstNameFromClaimsPrincipal(ClaimsPrincipal claimsPrincipal)
         {
             string firstName;
 

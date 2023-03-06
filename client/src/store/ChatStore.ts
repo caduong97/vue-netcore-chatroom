@@ -104,7 +104,16 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
     const path = ChatStoreModule.apiPath + "/createMessage";
 
     try {
-      // TODO: add to pending message list
+      const chat = this.chats.find(c => c.id === payload.sentToChatId);
+      if (!chat) return
+      // Push the payload to the chat messages array as pending message 
+      const messageIndex = chat.messages.findIndex(m => m.pendingId === payload.pendingId)
+      if (messageIndex > -1) {
+        chat.messages.splice(messageIndex, 1, payload)
+      } else {
+        chat.messages.push(payload);
+      }
+
       const response = await ApiService.post<Chat>(path, payload);
 
     } catch (error) {
@@ -124,7 +133,36 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
     if (!chat) {
       return
     }
-    chat.messages.push(Message.fromApi(payload));
+
+    const pendingMessageIndex = chat.messages.findIndex(m => m.pendingId === payload.pendingId) 
+
+    const updatedMessage = Message.fromApi(payload)
+    updatedMessage.pendingId = null // The message has been succesfully, set pending id to null here
+    if (pendingMessageIndex > -1) {
+      chat.messages.splice(pendingMessageIndex, 1, updatedMessage)
+    } else {
+      chat.messages.push(updatedMessage);
+    }
+  }
+
+  @Action
+  showFailedChatMessageToSender(hubResponse: HubResponse<Message>) {
+    this.SHOW_FAILED_CHAT_MESSAGE(hubResponse.data);
+  }
+
+  @Mutation
+  SHOW_FAILED_CHAT_MESSAGE(payload: Message) {
+    const chat = this.chats.find(c => c.id === payload.sentToChatId);
+    if (!chat) {
+      return
+    }
+
+    // TODO: save failed message to somewhere that can be resent later, 
+    // right now failed messages are only preserved in Vuex store, meaning if if user refresh they won't see them can cannot "Retry" anymore
+    const failedMessageIndex = chat.messages.findIndex(m => m.pendingId === payload.pendingId) 
+    if (failedMessageIndex > -1) {
+      chat.messages.splice(failedMessageIndex, 1, Message.fromApi(payload))
+    } 
   }
 
   @Action
@@ -134,7 +172,7 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
   @Mutation
   ADD_CONNECTION_MAPPINGS(payload: HubConnectionMapping[]) {
-    // console.log("ADD_CONNECTION_MAPPINGS", payload)
+    console.log("ADD_CONNECTION_MAPPINGS", payload)
     payload.forEach(connectionMapping => {
       const exisingConnectionMapping = this.chatHubConnectionMappings
         .find(cm => cm.connectionId === connectionMapping.connectionId && cm.email === connectionMapping.email);
@@ -151,7 +189,7 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
   @Mutation
   REMOVE_CONNECTION_MAPPINGS(payload: HubConnectionMapping[]) {
-    // console.log("REMOVE_CONNECTION_MAPPINGS", payload)
+    console.log("REMOVE_CONNECTION_MAPPINGS", payload)
     payload.forEach(connectionMapping => {
       const exisingConnectionMappingIndex = this.chatHubConnectionMappings
         .findIndex(cm => cm.connectionId === connectionMapping.connectionId && cm.email === connectionMapping.email);
@@ -168,7 +206,7 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
   @Mutation
   UPDATE_MESSAGING_STATUS(payload: {chatId: string, incoming: boolean}) {
-    // console.log("UPDATE_MESSAGING_STATUS", payload)
+    console.log("UPDATE_MESSAGING_STATUS", payload)
     const chat = this.chats.find(c => c.id === payload.chatId);
     if (chat) {
       chat.messageIncoming = payload.incoming
@@ -186,6 +224,7 @@ const ChatStore = getModule(ChatStoreModule);
 export const chatHubMethodHandlers: HubMethodHandler[] = [
   {name: "ReceiveMessage", handler: ChatStore.receiveMessage},
   {name: "BroadcastChatMessage", handler: ChatStore.broadcastChatMessage},
+  {name: "ShowFailedChatMessageToSender", handler: ChatStore.showFailedChatMessageToSender},
   {name: "AddConnectionMappings", handler: ChatStore.addConnectionMappings},
   {name: "RemoveConnectionMappings", handler: ChatStore.removeConnectionMappings},
   {name: "UpdateMessagingStatus", handler: ChatStore.updateMessagingStatus}
