@@ -44,4 +44,8 @@ export default class Chat {;
       .filter(u => chatUserIds.includes(u.id));
     return chatUsers.filter(u => connectionMappings.map(cm => cm.email).includes(u.email))
   }
+  
+  get latestMessage(): Message {
+    return this.messages[0];
+  }
 }

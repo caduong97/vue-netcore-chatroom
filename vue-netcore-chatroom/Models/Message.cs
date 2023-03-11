@@ -21,7 +21,9 @@ namespace vue_netcore_chatroom.Models
 		public int? SentByChatUserId { get; set; }
 		public ChatUser? SentBy { get; set; }
 
-        public Guid? SentByUserId => SentBy?.UserId ?? null; 
+        public Guid? SentByUserId => SentBy?.UserId ?? null;
+
+        public string SendByUserName => SentBy?.User?.FullName ?? "";
 
         [ForeignKey("SentTo")]
         public Guid SentToChatId { get; set; }

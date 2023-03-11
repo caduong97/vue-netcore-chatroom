@@ -32,7 +32,7 @@
       </v-menu>
     </v-app-bar>
 
-    <v-navigation-drawer v-model="drawer" app :temporary="$vuetify.breakpoint.mdAndDown">
+    <v-navigation-drawer v-model="drawer" app :temporary="$vuetify.breakpoint.mdAndDown" width="300">
       <v-list-item link to="/" :style="$vuetify.breakpoint.smAndDown ? 'height: 56px;': 'height: 64px;'">
         <v-list-item-icon>
           <v-icon size="28">mdi-home</v-icon>

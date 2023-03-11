@@ -56,6 +56,7 @@ namespace vue_netcore_chatroom.Services
             var messages = await _context.Messages
                 .Where(m => !m.ArchivedAt.HasValue && m.SentToChatId == chatId)
                 .Include(m => m.SentBy)
+                    .ThenInclude(sb => sb.User)
                 .OrderByDescending(m => m.SentAt)
                 .ToListAsync();
 

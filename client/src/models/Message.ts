@@ -14,7 +14,9 @@ export default class Message {
   sentAt: Date = new Date();
   archivedAt: Date | null = null;
   sentByUserId: string | null = null;
+  sendByUserName: string | null = null;
   sentToChatId: string | null = "";
+  
   
   pendingId: string | null = null;
   savingStatus: MessageSavingStatusEnum = MessageSavingStatusEnum.Success;
@@ -26,6 +28,7 @@ export default class Message {
     message.sentAt = new Date(data.sentAt);
     message.archivedAt = data.archivedAt ? new Date(data.archivedAt) : null;
     message.sentByUserId = data.sentByUserId;
+    message.sendByUserName = data.sendByUserName;
     message.sentToChatId = data.sentToChatId;
     message.pendingId = data.pendingId;
     message.savingStatus = data.savingStatus;
