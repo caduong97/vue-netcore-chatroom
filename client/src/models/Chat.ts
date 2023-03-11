@@ -4,6 +4,7 @@ import ChatGroupConnectionMapping from "./ChatGroupConnectionMapping";
 import ChatStore from "@/store/ChatStore";
 import UserStore from "@/store/UserStore";
 import User from "./User";
+import HubConnectionMapping from "@/interfaces/HubConnectionMapping";
 
 export default class Chat {;
   id: string = Guid.createEmpty().toString();
@@ -32,5 +33,15 @@ export default class Chat {;
 
   get chatHasOnlyOneUser() {
     return this.chatUserIds.length === 1;
+  }
+
+  get chatUsers(): User[] {
+    return UserStore.users.filter(u => this.chatUserIds.includes(u.id));
+  }
+
+  public static GetChatOnlineUsers(connectionMappings: HubConnectionMapping[], chatUserIds: string[]): User[] {
+    const chatUsers = UserStore.users
+      .filter(u => chatUserIds.includes(u.id));
+    return chatUsers.filter(u => connectionMappings.map(cm => cm.email).includes(u.email))
   }
 }

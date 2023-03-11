@@ -2,6 +2,13 @@
   <div>
     <v-app-bar color="primary" elevation="0" app>
       <v-app-bar-nav-icon @click="drawer = !drawer" dark></v-app-bar-nav-icon>
+
+      <div v-if="chat && chatOnlineUsers.length > 0">
+        <ChatOnlineUser v-if="chatOnlineUsers.length === 1" :onlineUser="chatOnlineUsers[0]"></ChatOnlineUser>
+        <ChatOnlineUser v-else :onlineUserCount="chatOnlineUsers.length" :allOnlineUsers="chatOnlineUsers" ></ChatOnlineUser>
+      </div>
+
+
       <v-spacer></v-spacer>
       <v-menu offset-y left close-on-content-click transition="slide-y-transition" >
         <template v-slot:activator="{ on, attrs }">
@@ -54,11 +61,16 @@ import User from '@/models/User';
 import AuthStore from '@/store/AuthStore';
 import UserStore from '@/store/UserStore';
 import ChatNavigation from "@/components/ChatNavigation.vue"
+import ChatStore from "@/store/ChatStore";
+import Chat from "@/models/Chat";
+import HubConnectionMapping from "@/interfaces/HubConnectionMapping";
+import ChatOnlineUser from "./ChatOnlineUser.vue";
 
 @Component({
   name: "Navigation",
   components: {
-    ChatNavigation
+    ChatNavigation,
+    ChatOnlineUser
   }
 })
 export default class Navigation extends Vue {
@@ -66,6 +78,30 @@ export default class Navigation extends Vue {
 
   get me(): User | null {
     return UserStore.me;
+  }
+
+  get chatHubConnectionMappings(): HubConnectionMapping[] {
+    return ChatStore.chatHubConnectionMappings
+      .filter((cm, index, arr) => arr.findIndex(chcm => chcm.email === cm.email) === index)
+      .filter(cm => cm.email !== this.me?.email);
+  }
+
+  get chats(): Chat[] {
+    return ChatStore.chats;
+  }
+
+  get chatIdFromRouteParam() {
+    return this.$route.params.chatId ?? null
+  }
+  
+  get chat(): Chat | null  {
+    return this.chats.find(c => c.id == this.chatIdFromRouteParam) ?? null
+  }
+
+  get chatOnlineUsers(): User[] {
+    return this.chat
+      ? Chat.GetChatOnlineUsers(this.chatHubConnectionMappings, this.chat?.chatUserIds)
+      : []
   }
 
   async onSignOutClick() {
