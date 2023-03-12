@@ -18,6 +18,9 @@ namespace vue_netcore_chatroom.Models
 		public User? User { get; set; }
 
 		public List<Message> Messages { get; set; }
-	}
+
+        public List<MessageSeenByChatUser> SeenMessages { get; set; }
+
+    }
 }
 

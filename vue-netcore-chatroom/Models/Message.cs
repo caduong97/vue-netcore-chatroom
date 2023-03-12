@@ -29,6 +29,8 @@ namespace vue_netcore_chatroom.Models
         public Guid SentToChatId { get; set; }
         public Chat SentTo { get; set; }
 
-	}
+        public List<MessageSeenByChatUser> SeenByChatUsers { get; set; }
+
+    }
 }
 

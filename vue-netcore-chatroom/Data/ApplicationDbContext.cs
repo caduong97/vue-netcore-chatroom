@@ -14,10 +14,22 @@ namespace vue_netcore_chatroom.Data
         public DbSet<Chat> Chats {get;set;}
         public DbSet<ChatUser> ChatUsers { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<MessageSeenByChatUser> MessageSeenByChatUsers { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {         
+        {
+            modelBuilder.Entity<MessageSeenByChatUser>()
+                .HasKey(msbu => new { msbu.ChatUserId, msbu.MessageId });
+            modelBuilder.Entity<MessageSeenByChatUser>()
+                .HasOne(msbu => msbu.ChatUser)
+                .WithMany(cu => cu.SeenMessages)
+                .HasForeignKey(msbu => msbu.ChatUserId);
+            modelBuilder.Entity<MessageSeenByChatUser>()
+                .HasOne(msbu => msbu.Message)
+                .WithMany(m => m.SeenByChatUsers)
+                .HasForeignKey(msbu => msbu.MessageId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
