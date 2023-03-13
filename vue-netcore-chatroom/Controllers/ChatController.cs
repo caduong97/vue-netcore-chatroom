@@ -76,6 +76,19 @@ namespace vue_netcore_chatroom.Controllers
 
             return Ok(messageDto);
         }
+
+        [HttpPost("MarkMessagesAsSeen/{chatId}")]
+        public async Task<IActionResult> MarkMessagesAsSeen([FromRoute] Guid chatId, [FromBody] List<int> messageIds)
+        {
+            if (!ModelState.IsValid)
+            {
+                throw new Exception("MarkMessagesAsSeen error: ModelState is invalid.");
+            }
+
+            var messages = await _chatService.MarkMessagesAsSeen(chatId, messageIds, HttpContext.User);
+
+            return Ok(messages);
+        }
     }
 }
 

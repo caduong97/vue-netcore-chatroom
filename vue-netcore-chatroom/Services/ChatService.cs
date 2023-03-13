@@ -14,6 +14,7 @@ namespace vue_netcore_chatroom.Services
         Task<List<Message>> GetChatMessages(Guid chatId, int startingIndex, int amount);
         Task<Chat> CreateOrUpdateChat(ChatDto dto);
         Task<MessageDto> CreateMessage(MessageDto data, ClaimsPrincipal claimsPrincipal);
+        Task<List<MessageDto>> MarkMessagesAsSeen(Guid chatId, List<int> messageIds, ClaimsPrincipal claimsPrincipal);
 
     }
 
@@ -204,7 +205,43 @@ namespace vue_netcore_chatroom.Services
             return messageDto;
         }
 
-        
+        public async Task<List<MessageDto>> MarkMessagesAsSeen(Guid chatId, List<int> messageIds, ClaimsPrincipal claimsPrincipal)
+        {
+            var user = await _userService.GetUserByClaimsPrincipal(claimsPrincipal);
+
+            var chatUser = await _context.ChatUsers
+                .FirstOrDefaultAsync(cu => cu.UserId.HasValue && cu.UserId.Value == user.Id);
+
+            if (chatUser == null)
+            {
+                throw new Exception("MarkMessagesAsSeen error: user does not belong to chat or chat does not exist");
+            }
+
+            var messages = await _context.Messages
+                .Where(m => messageIds.Contains(m.Id))
+                .Include(m => m.SeenByChatUsers)
+                .ToListAsync();
+
+            foreach (var message in messages)
+            {
+                if (!message.SeenByChatUserIds.Contains(chatUser.Id))
+                {
+                    var seenByChatUser = new MessageSeenByChatUser()
+                    {
+                        ChatUserId = chatUser.Id,
+                        MessageId = message.Id
+                    };
+                    message.SeenByChatUsers.Add(seenByChatUser);
+                }
+                
+            }
+
+            await _context.SaveChangesAsync();
+
+            var messageDtos = messages.Select(m => MessageDto.FromDbModel(m)).ToList();
+
+            return messageDtos;
+        }
     }
 }
 
