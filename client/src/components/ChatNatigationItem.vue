@@ -72,8 +72,8 @@ export default class ChatNavigationItem extends Vue {
     if (this.chat.latestMessage) {
       const sender = this.chat.latestMessage.sentByUserId === this.me?.id
         ? "You"
-        : this.chat.latestMessage.sendByUserName !== null
-          ? this.chat.latestMessage.sendByUserName
+        : this.chat.latestMessage.sentByUserName !== null
+          ? this.chat.latestMessage.sentByUserName
           : "Other"
 
       return `${sender}: ${this.chat.latestMessage.text}`

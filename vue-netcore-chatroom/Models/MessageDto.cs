@@ -16,9 +16,11 @@ namespace vue_netcore_chatroom.Models
         // Id of the User, not the ChatUser
         public Guid? SentByUserId { get; set; }
 
-        public string? SendByUserName { get; set; }
+        public string? SentByUserName { get; set; }
 
         public Guid SentToChatId { get; set; }
+
+        public List<Guid> SeenByUserIds { get; set; }
 
         public Guid? PendingId { get; set; }
 
@@ -33,8 +35,9 @@ namespace vue_netcore_chatroom.Models
                 SentAt = dbModel.SentAt,
                 ArchivedAt = dbModel.ArchivedAt,
                 SentByUserId = dbModel.SentByUserId,
-                SendByUserName = dbModel.SendByUserName,
-                SentToChatId = dbModel.SentToChatId
+                SentByUserName = dbModel.SentByUserName,
+                SentToChatId = dbModel.SentToChatId,
+                SeenByUserIds = dbModel.SeenByUserIds
             };
 
             return dto;

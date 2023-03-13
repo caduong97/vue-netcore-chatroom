@@ -14,9 +14,9 @@ export default class Message {
   sentAt: Date = new Date();
   archivedAt: Date | null = null;
   sentByUserId: string | null = null;
-  sendByUserName: string | null = null;
+  sentByUserName: string | null = null;
   sentToChatId: string | null = "";
-  
+  seenByUserIds: string[] = [];
   
   pendingId: string | null = null;
   savingStatus: MessageSavingStatusEnum = MessageSavingStatusEnum.Success;
@@ -28,8 +28,9 @@ export default class Message {
     message.sentAt = new Date(data.sentAt);
     message.archivedAt = data.archivedAt ? new Date(data.archivedAt) : null;
     message.sentByUserId = data.sentByUserId;
-    message.sendByUserName = data.sendByUserName;
+    message.sentByUserName = data.sentByUserName;
     message.sentToChatId = data.sentToChatId;
+    message.seenByUserIds = [...data.seenByUserIds]
     message.pendingId = data.pendingId;
     message.savingStatus = data.savingStatus;
 
@@ -46,6 +47,14 @@ export default class Message {
 
   get outgoing(): boolean {
     return !this.incoming;
+  }
+  
+  get unseen(): boolean {
+    return this.me === null || (this.sentByUserId !== this.me.id && !this.seenByUserIds.includes(this.me.id))
+  }
+
+  get seen(): boolean {
+    return this.outgoing || (this.me !== null && this.sentByUserId !== this.me.id && this.seenByUserIds.includes(this.me.id))
   }
 
   get pending(): boolean {

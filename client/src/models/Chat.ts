@@ -44,8 +44,15 @@ export default class Chat {;
       .filter(u => chatUserIds.includes(u.id));
     return chatUsers.filter(u => connectionMappings.map(cm => cm.email).includes(u.email))
   }
-  
-  get latestMessage(): Message {
-    return this.messages[0];
+
+  get sortedDescendingMessages(): Message[] {
+    return this.messages.sort((a: Message, b: Message) => a.sentAt > b.sentAt ? -1 : 1);
+
   }
+
+  get latestMessage(): Message {
+    return this.sortedDescendingMessages[0];
+  }
+
+
 }

@@ -23,13 +23,20 @@ namespace vue_netcore_chatroom.Models
 
         public Guid? SentByUserId => SentBy?.UserId ?? null;
 
-        public string SendByUserName => SentBy?.User?.FullName ?? "";
+        public string SentByUserName => SentBy?.User?.FullName ?? "";
 
         [ForeignKey("SentTo")]
         public Guid SentToChatId { get; set; }
         public Chat SentTo { get; set; }
 
         public List<MessageSeenByChatUser> SeenByChatUsers { get; set; }
+
+        public List<int> SeenByChatUserIds => SeenByChatUsers?.Select(sbcu => sbcu.ChatUserId).ToList() ?? new List<int>();
+
+        public List<Guid> SeenByUserIds => SeenByChatUsers?
+            .Where(sbcu => sbcu.ChatUser.UserId.HasValue)
+            .Select(sbcu => sbcu.ChatUser.UserId!.Value)
+            .ToList() ?? new List<Guid>();
 
     }
 }

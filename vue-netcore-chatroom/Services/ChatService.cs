@@ -18,7 +18,7 @@ namespace vue_netcore_chatroom.Services
     }
 
 
-	public class ChatService : IChatService
+    public class ChatService : IChatService
 	{
         private readonly ApplicationDbContext _context;
         private readonly IUserService _userService;
@@ -37,12 +37,39 @@ namespace vue_netcore_chatroom.Services
             var user = await _userService.GetUserByClaimsPrincipal(claimsPrincipal);
 
             var chatsQuery = _context.Chats
-                .Include(c => c.ChatUsers);
+                .Include(c => c.ChatUsers)
+                .Include(c => c.Messages)
+                    .ThenInclude(m => m.SeenByChatUsers)
+                .Include(c => c.Messages)
+                    .ThenInclude(m => m.SentBy)
+                        .ThenInclude(sb => sb.User);
 
             List<Chat> chats = chatsQuery
                 .AsEnumerable()
                 .Where(c => c.ChatUserIds.Any() && c.ChatUserIds.Contains(user.Id))
                 .ToList();
+
+
+            foreach (var chat in chats)
+            {
+                if (!chat.Messages.Any()) continue;
+
+                var chatUser = chat.ChatUsers
+                    .FirstOrDefault(cu => cu.UserId.HasValue && cu.UserId.Value == user.Id);
+
+                var unseenMessages = chat.Messages
+                    .Where(m => m.SentByChatUserId != chatUser.Id && !m.SeenByChatUserIds.Contains(chatUser.Id))
+                    .ToList();
+
+                if (unseenMessages.Any())
+                {
+                    chat.Messages = unseenMessages;
+                }
+                else
+                {
+                    chat.Messages = chat.Messages.OrderBy(m => m.SentAt).TakeLast(1).ToList();
+                }
+            }
 
             return chats;
         }
