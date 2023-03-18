@@ -120,7 +120,7 @@ export default class ChatView extends Vue {
   }
 
   get sortedMessages(): Message[] {
-    return this.chat.messages.sort((a: Message, b: Message) => a.sentAt > b.sentAt ? -1 : 1);
+    return this.chat.sortedLatestToOldestMessages;
   }
 
   get groupedSortedMessagesByDay() {

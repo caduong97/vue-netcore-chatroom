@@ -5,6 +5,7 @@ import ChatStore from "@/store/ChatStore";
 import UserStore from "@/store/UserStore";
 import User from "./User";
 import HubConnectionMapping from "@/interfaces/HubConnectionMapping";
+import { relativeTimeRounding } from "moment";
 
 export default class Chat {;
   id: string = Guid.createEmpty().toString();
@@ -45,13 +46,14 @@ export default class Chat {;
     return chatUsers.filter(u => connectionMappings.map(cm => cm.email).includes(u.email))
   }
 
-  get sortedDescendingMessages(): Message[] {
-    return this.messages.sort((a: Message, b: Message) => a.sentAt > b.sentAt ? -1 : 1);
-
+  get sortedLatestToOldestMessages(): Message[] {
+    const sortedMessages = this.messages.slice(0)
+    sortedMessages.sort((a: Message, b: Message) => new Date(a.sentAt) > new Date(b.sentAt) ? -1 : 1);
+    return sortedMessages
   }
 
   get latestMessage(): Message {
-    return this.sortedDescendingMessages[0];
+    return this.sortedLatestToOldestMessages[0];
   }
 
 
