@@ -212,6 +212,33 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
       chat.messageIncoming = payload.incoming
     }
   }
+
+  @Action
+  async markMessagesAsSeen(payload: {chatId: string, messagesIds: number[]}) {
+    const path = `${ChatStoreModule.apiPath}/markMessagesAsSeen/${payload.chatId}`;
+
+    try {
+      const response = await ApiService.post<Message[]>(path, payload.messagesIds)
+      this.MARK_MESSAGES_AS_SEEN(response.data);
+    } catch (error) {
+      
+    }
+  }
+
+  @Mutation
+  MARK_MESSAGES_AS_SEEN(payload: Message[]) {
+    const chat = this.chats.find(c => c.id === payload[0].sentToChatId);
+    if (!chat) {
+      return
+    }
+
+    payload.forEach(m => {
+      const message = chat.messages.find(mes => m.id === mes.id)
+      if (!message) return
+      message.seenByUserIds.splice(0, message.seenByUserIds.length);
+      message.seenByUserIds = [...m.seenByUserIds];
+    })
+  }
   
   @Action
   receiveMessage(hubResponse: HubResponse<string>) {

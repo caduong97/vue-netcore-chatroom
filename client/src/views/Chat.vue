@@ -106,6 +106,7 @@ export default class ChatView extends Vue {
     if (newVal !== null && newVal !== oldVal) {
       await this.initChat();
       this.initMessage();
+      this.markMessagesAsSeen();
     }
     
   }
@@ -133,6 +134,10 @@ export default class ChatView extends Vue {
 
   get groupedSortedMessagesByDayKeys() {
     return Object.keys(this.groupedSortedMessagesByDay);
+  }
+
+  get unseenMessages() {
+    return this.sortedMessages.filter(m => !m.seen);
   }
 
   async createMessage() {
@@ -181,6 +186,16 @@ export default class ChatView extends Vue {
 
   onChatInputBlur() {
     this.$chatHub.connection.invoke("OnMessageInputBlur", this.chat.id)
+  }
+
+  async markMessagesAsSeen() {
+    if (this.unseenMessages.length > 0) {
+      await ChatStore.markMessagesAsSeen({
+        chatId: this.chat.id, 
+        messagesIds: this.unseenMessages.map(m => m.id)
+      })
+    }
+ 
   }
 
   // joinChat(chatId: string) {

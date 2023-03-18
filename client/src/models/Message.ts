@@ -48,11 +48,6 @@ export default class Message {
   get outgoing(): boolean {
     return !this.incoming;
   }
-  
-  get unseen(): boolean {
-    return this.me === null || (this.sentByUserId !== this.me.id && !this.seenByUserIds.includes(this.me.id))
-  }
-
   get seen(): boolean {
     return this.outgoing || (this.me !== null && this.sentByUserId !== this.me.id && this.seenByUserIds.includes(this.me.id))
   }
