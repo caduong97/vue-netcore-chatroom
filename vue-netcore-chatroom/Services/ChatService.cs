@@ -239,8 +239,15 @@ namespace vue_netcore_chatroom.Services
 
             await _context.SaveChangesAsync();
 
+            var chat = await _context.Chats
+                .FirstOrDefaultAsync(c => c.Id == chatId);
             var messageDtos = messages.Select(m => MessageDto.FromDbModel(m)).ToList();
 
+            if (chat != null) {
+                var hubResponse = new HubResponse<List<MessageDto>>(messageDtos);
+                await _chatHub.Clients.Group(chat.Id.ToString()).SendAsync("UpdateMessagesSeenByUsers", hubResponse);
+            }
+            
             return messageDtos;
         }
     }

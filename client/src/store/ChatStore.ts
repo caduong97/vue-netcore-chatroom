@@ -219,14 +219,19 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
     try {
       const response = await ApiService.post<Message[]>(path, payload.messagesIds)
-      this.MARK_MESSAGES_AS_SEEN(response.data);
     } catch (error) {
-      
+      console.error(error);
     }
   }
 
+  @Action
+  updateMessagesSeenByUsers(hubResponse: HubResponse<Message[]>) {
+    this.UPDATE_MESSAGES_SEEN_BY_USERS(hubResponse.data);
+  }
+
   @Mutation
-  MARK_MESSAGES_AS_SEEN(payload: Message[]) {
+  UPDATE_MESSAGES_SEEN_BY_USERS(payload: Message[]) {
+    // console.log("UPDATE_MESSAGES_SEEN_BY_USERS", payload)
     const chat = this.chats.find(c => c.id === payload[0].sentToChatId);
     if (!chat) {
       return
@@ -254,7 +259,8 @@ export const chatHubMethodHandlers: HubMethodHandler[] = [
   {name: "ShowFailedChatMessageToSender", handler: ChatStore.showFailedChatMessageToSender},
   {name: "AddConnectionMappings", handler: ChatStore.addConnectionMappings},
   {name: "RemoveConnectionMappings", handler: ChatStore.removeConnectionMappings},
-  {name: "UpdateMessagingStatus", handler: ChatStore.updateMessagingStatus}
+  {name: "UpdateMessagingStatus", handler: ChatStore.updateMessagingStatus},
+  {name: "UpdateMessagesSeenByUsers", handler: ChatStore.updateMessagesSeenByUsers}
 ]
 
 export default ChatStore;
