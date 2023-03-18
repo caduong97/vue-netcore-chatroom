@@ -56,5 +56,7 @@ export default class Chat {;
     return this.sortedLatestToOldestMessages[0];
   }
 
-
+  get unseenChatMessageCount(): number {
+    return this.messages.filter(m => !m.seen).length;
+  }
 }

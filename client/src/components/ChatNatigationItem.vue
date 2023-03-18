@@ -5,7 +5,9 @@
   >
     <v-list-item 
       @click.stop="onChatClick(chat.id)"
+      class="py-2"
       :class="{'v-list-item--active': chatIdFromRouteParam === chat.id}"
+      
     >
       <v-row no-gutters>
         <v-col cols="2" class="d-flex justify-start align-center">
@@ -14,12 +16,18 @@
           </v-list-item-icon>
         </v-col>
         
-        <v-list-item-content class="text-left">
-          <v-list-item-title class="d-flex align-center">{{ chat.name }}</v-list-item-title>
-          <v-list-item-subtitle class="mt-3" v-if="chatSubtitleText">{{ chatSubtitleText }}</v-list-item-subtitle>
+        <v-list-item-content class="py-0">
+          <v-list-item-title class="mt-2">{{ chat.name }}</v-list-item-title>
+          <v-list-item-subtitle 
+            v-if="chatSubtitleText"
+            class="mt-2" 
+            :class="{
+              'font-weight-bold': chat.unseenChatMessageCount > 0
+            }"
+            >{{ chatSubtitleText }}</v-list-item-subtitle>
         </v-list-item-content>
 
-        <v-col cols="2" class="d-flex justify-end align-center">
+        <v-col cols="2" class="d-flex flex-wrap justify-space-around">
           <MoreAction
             :items="moreActionItems"
             :target="chat.id"
@@ -28,6 +36,11 @@
             @moreActionToggled="onMoreActionToggled"
             @moreActionItemClicked="onMoreActionItemClicked"
           ></MoreAction>
+          <div 
+            v-if="chat.unseenChatMessageCount > 0"
+            class="light-blue accent-4 white--text rounded-circle text-caption d-flex justify-center mt-auto" 
+            style="width: 20px; height: 20px;"
+          >{{ chat.unseenChatMessageCount }}</div>
         </v-col>
       </v-row>
   </v-list-item>
