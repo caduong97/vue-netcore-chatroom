@@ -1,6 +1,8 @@
 import UserStore from "@/store/UserStore";
 import User from "@/models/User";
 import moment from "moment";
+import Chat from "./Chat";
+import ChatStore from "@/store/ChatStore";
 
 export enum MessageSavingStatusEnum
 {
@@ -41,6 +43,10 @@ export default class Message {
     return UserStore.me;
   }
 
+  get chat(): Chat | null {
+    return ChatStore.chats.find(c => c.id === this.sentToChatId) ?? null;
+  }
+
   get incoming(): boolean {
     return this.me === null || this.sentByUserId !== this.me.id;
   }
@@ -48,8 +54,18 @@ export default class Message {
   get outgoing(): boolean {
     return !this.incoming;
   }
+
   get seen(): boolean {
     return this.outgoing || (this.me !== null && this.sentByUserId !== this.me.id && this.seenByUserIds.includes(this.me.id))
+  }
+
+  get seenByOtherUser(): boolean {
+    return this.outgoing && this.seenByUserIds.length > 0
+  }
+
+  get seenByEveryOne(): boolean {
+    return (this.outgoing && this.seenByUserIds.length === this.chat?.chatUserIds.filter(cuid => cuid !== this.me?.id).length) ||
+    (this.incoming && this.seenByUserIds.length === this.chat?.chatUserIds.filter(cuid => cuid !== this.sentByUserId).length)
   }
 
   get pending(): boolean {

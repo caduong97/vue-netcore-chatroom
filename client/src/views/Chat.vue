@@ -24,7 +24,9 @@
               v-for="(message, index) in groupedSortedMessagesByDay[key]" 
               :key="index" 
               :message="message"
+              :showAdditionalInfo="showAdditionalInfoForMessageId === message.id"
               @messageRetry="recreateMessage(message)"
+              @messageClick="showMessageAdditionalInfo(message)"
             />
             <span class="chat-message-container__date">{{ key }}</span>
 
@@ -92,6 +94,7 @@ Component.registerHooks([
 export default class ChatView extends Vue {
   loading: boolean = false;
   message: Message = new Message();
+  showAdditionalInfoForMessageId: number | null = null;
 
   get chats(): Chat[] {
     return ChatStore.chats;
@@ -162,6 +165,12 @@ export default class ChatView extends Vue {
     // console.log("recreateMessage", message, newMessage)
 
     await ChatStore.createMessage(newMessage);
+  }
+
+  showMessageAdditionalInfo(message: Message) {
+    this.showAdditionalInfoForMessageId = this.showAdditionalInfoForMessageId === message.id
+      ? null
+      : message.id
   }
 
   initMessage() {

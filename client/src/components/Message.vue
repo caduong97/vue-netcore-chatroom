@@ -8,6 +8,21 @@
       'message-item__failed': message.failedToSave
     }"
   >
+    <v-expand-transition>
+      <div  
+        v-if="message.sent && showAdditionalInfo"
+        class="text-caption d-flex align-end"
+        :class="{
+          'ml-auto': message.outgoing,
+          'mr-auto': message.incoming
+        }" 
+        style="width: max-content; height: 30px;"
+      >
+        {{ message.sentDateFormatted }}
+      </div>
+
+    </v-expand-transition>
+
     <v-sheet
       :min-height="50" 
       :min-width="80"
@@ -20,24 +35,24 @@
         'ml-auto': message.outgoing,
         'mr-auto': message.incoming
       }"
-      @click="showSentAtDate = !showSentAtDate"
+      @click="onMessageClick"
     >
       {{message.text}}
     </v-sheet>
+    
     <v-expand-transition>
       <div  
-        v-if="message.sent && showSentAtDate"
+        v-if="message.seenByEveryOne && showAdditionalInfo"
         class="text-caption"
         :class="{
           'ml-auto': message.outgoing,
           'mr-auto': message.incoming
         }" 
-        style="width: max-content;"
+        style="width: max-content; height: 30px;"
       >
-        {{ message.sentDateFormatted }}
-        <v-icon size="15">mdi-check</v-icon>
+        Seen by everyone
+        <v-icon size="15" color="primary">mdi-check-circle</v-icon>
       </div>
-
     </v-expand-transition>
 
     <div  
@@ -63,7 +78,13 @@ export default class MessageItem extends Vue {
   @Prop({ required: true })
   message!: Message;
 
-  showSentAtDate: boolean = false;
+  @Prop({ required: false, default: false })
+  showAdditionalInfo!: boolean;
+
+
+  onMessageClick() {
+    this.$emit("messageClick")
+  }
 
   onRetryClick() {
     this.$emit("messageRetry")

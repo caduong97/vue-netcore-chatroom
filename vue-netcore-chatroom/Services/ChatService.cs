@@ -85,6 +85,7 @@ namespace vue_netcore_chatroom.Services
                 .Where(m => !m.ArchivedAt.HasValue && m.SentToChatId == chatId)
                 .Include(m => m.SentBy)
                     .ThenInclude(sb => sb.User)
+                .Include(m => m.SeenByChatUsers)
                 .OrderByDescending(m => m.SentAt)
                 .ToListAsync();
 
