@@ -23,10 +23,10 @@ namespace vue_netcore_chatroom.Services
 	{
         private readonly ApplicationDbContext _context;
         private readonly IUserService _userService;
-        private readonly IHubContext<ChatHub> _chatHub;
+        private readonly IHubContext<ChatHub, IChatClient> _chatHub;
 
 
-        public ChatService (ApplicationDbContext context, IUserService userService, IHubContext<ChatHub> chatHub)
+        public ChatService (ApplicationDbContext context, IUserService userService, IHubContext<ChatHub, IChatClient> chatHub)
         {
             _context = context;
             _userService = userService;
@@ -189,7 +189,7 @@ namespace vue_netcore_chatroom.Services
                 var email = _userService.EmailFromClaimsPrincipal(claimsPrincipal);
                 var hubResponseToCaller = new HubResponse<MessageDto>(failedToSaveMessage);
 
-                await _chatHub.Clients.User(email).SendAsync("ShowFailedChatMessageToSender", hubResponseToCaller);
+                await _chatHub.Clients.User(email).ShowFailedChatMessageToSender(hubResponseToCaller);
 
                 return data;
             }
@@ -199,7 +199,7 @@ namespace vue_netcore_chatroom.Services
             var hubResponse = new HubResponse<MessageDto>(messageDto);
 
             // TODO: handle exception
-            await _chatHub.Clients.Group(chat.Id.ToString()).SendAsync("BroadcastChatMessage", hubResponse);
+            await _chatHub.Clients.Group(chat.Id.ToString()).BroadcastChatMessage(hubResponse);
 
 
 
@@ -245,7 +245,7 @@ namespace vue_netcore_chatroom.Services
 
             if (chat != null) {
                 var hubResponse = new HubResponse<List<MessageDto>>(messageDtos);
-                await _chatHub.Clients.Group(chat.Id.ToString()).SendAsync("UpdateMessagesSeenByUsers", hubResponse);
+                await _chatHub.Clients.Group(chat.Id.ToString()).UpdateMessagesSeenByUsers(hubResponse);
             }
             
             return messageDtos;

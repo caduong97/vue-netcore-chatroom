@@ -12,34 +12,8 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace vue_netcore_chatroom.Hubs
 {
-    public class ConnectionMapping
-    {
-        public string ConnectionId { get; set; }
-
-        public string Email { get; set; }
-
-        public ConnectionMapping(string connectionId, string email)
-        {
-            ConnectionId = connectionId;
-            Email = email;
-        }
-    }
-
-    public class MessagingStatus
-    {
-        public Guid ChatId { get; set; }
-
-        public bool Incoming { get; set; }
-
-        public MessagingStatus(Guid chatId, bool incoming)
-        {
-            ChatId = chatId;
-            Incoming = incoming;
-        }
-    }
-
     [Authorize]
-    public class ChatHub : Hub
+    public class ChatHub : Hub<IChatClient>
     {
         private ApplicationDbContext _context;
         private readonly IUserService _userService;
@@ -56,7 +30,7 @@ namespace vue_netcore_chatroom.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            await Clients.Caller.SendAsync("ReceiveMessage", "ChatHub connected");
+            await Clients.Caller.ReceiveMessage("ChatHub connected");
 
 
             if (Context.User != null)
@@ -81,12 +55,12 @@ namespace vue_netcore_chatroom.Hubs
 
 
                 var callerHubResponse = new HubResponse<List<ConnectionMapping>>(ConnectionMappings);
-                await Clients.Caller.SendAsync("AddConnectionMappings", callerHubResponse);
+                await Clients.Caller.AddConnectionMappings(callerHubResponse);
 
                 var allExceptCallerHubResponse = new HubResponse<List<ConnectionMapping>>(
                     new List<ConnectionMapping>() { userConnectionMapping }
                 );
-                await Clients.AllExcept(Context.ConnectionId).SendAsync("AddConnectionMappings", allExceptCallerHubResponse);
+                await Clients.AllExcept(Context.ConnectionId).AddConnectionMappings(allExceptCallerHubResponse);
 
             }
             
@@ -105,11 +79,11 @@ namespace vue_netcore_chatroom.Hubs
                 var allExceptCallerHubResponse = new HubResponse<List<ConnectionMapping>>(
                     new List<ConnectionMapping>() { userConnectionMapping }
                 );
-                await Clients.AllExcept(Context.ConnectionId).SendAsync("RemoveConnectionMappings", allExceptCallerHubResponse);
+                await Clients.AllExcept(Context.ConnectionId).RemoveConnectionMappings(allExceptCallerHubResponse);
             }
             
 
-            await Clients.Caller.SendAsync("ReceiveMessage", "ChatHub disconnected");
+            await Clients.Caller.ReceiveMessage("ChatHub disconnected");
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -119,7 +93,7 @@ namespace vue_netcore_chatroom.Hubs
                 new MessagingStatus(chatId, true)
             );
 
-            await Clients.OthersInGroup(chatId.ToString()).SendAsync("UpdateMessagingStatus", hubResponse);
+            await Clients.OthersInGroup(chatId.ToString()).UpdateMessagingStatus(hubResponse);
         }
 
         public async Task OnMessageInputBlur(Guid chatId)
@@ -128,12 +102,24 @@ namespace vue_netcore_chatroom.Hubs
                 new MessagingStatus(chatId, false)
             );
 
-            await Clients.OthersInGroup(chatId.ToString()).SendAsync("UpdateMessagingStatus", hubResponse);
+            await Clients.OthersInGroup(chatId.ToString()).UpdateMessagingStatus(hubResponse);
         }
 
-        public async Task SendMessage(string user, string message)
-            => await Clients.All.SendAsync("ReceiveMessage", user, message);
-
     }
+
+
+    public class MessagingStatus
+    {
+        public Guid ChatId { get; set; }
+
+        public bool Incoming { get; set; }
+
+        public MessagingStatus(Guid chatId, bool incoming)
+        {
+            ChatId = chatId;
+            Incoming = incoming;
+        }
+    }
+
 }
 
