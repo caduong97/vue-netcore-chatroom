@@ -171,7 +171,7 @@ export default class ChatCreationDialog extends Vue {
     } catch (error) {
       console.error("Error saving chat:", error)
     }
-    this.loading = true;
+    this.loading = false;
 
     this.chat = new Chat();
     this.closeDialog();

@@ -87,6 +87,16 @@ namespace vue_netcore_chatroom.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
+        public async Task JoinChat(Guid chatId) 
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, chatId.ToString());
+        }
+
+        public async Task LeaveChat(Guid chatId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
+        }
+
         public async Task OnMessageInputFocus(Guid chatId)
         {
             var hubResponse = new HubResponse<MessagingStatus>(

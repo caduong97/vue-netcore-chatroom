@@ -128,6 +128,18 @@ namespace vue_netcore_chatroom.Services
                 existingChat.ChatUsers.AddRange(usersToAdd);
                 await _context.SaveChangesAsync();
 
+                var chatDto = ChatDto.FromDbModel(existingChat);
+                var hubResponse = new HubResponse<ChatDto>(chatDto);
+
+                var addedChatUserIds = usersToAdd.Select(cu => cu.Id).ToList();
+                var addedUserEmails = _context.ChatUsers
+                    .Include(cu => cu.User)
+                    .Where(cu => cu.UserId.HasValue && addedChatUserIds.Contains(cu.Id))
+                    .Select(cu => cu.User!.Email)
+                    .ToList();
+                await _chatHub.Clients.Users(addedUserEmails).UpdateChatUsers(hubResponse);
+                await _chatHub.Clients.Group(existingChat.Id.ToString()).UpdateChatUsers(hubResponse);
+
                 return existingChat;
             } else
             {
@@ -143,6 +155,18 @@ namespace vue_netcore_chatroom.Services
                     .ToList();
 
                 await _context.SaveChangesAsync();
+
+                var chatDto = ChatDto.FromDbModel(newChat);
+                var hubResponse = new HubResponse<ChatDto>(chatDto);
+
+                var addedChatUserIds = newChat.ChatUsers.Select(cu => cu.Id).ToList();
+                var addedUserEmails = _context.ChatUsers
+                    .Include(cu => cu.User)
+                    .Where(cu => cu.UserId.HasValue && addedChatUserIds.Contains(cu.Id))
+                    .Select(cu => cu.User!.Email)
+                    .ToList();
+                await _chatHub.Clients.Users(addedUserEmails).UpdateChatUsers(hubResponse);
+
                 return newChat;
             }
         }

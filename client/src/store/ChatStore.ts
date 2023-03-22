@@ -10,6 +10,8 @@ import store from ".";
 import Message from "@/models/Message";
 import ChatGroupConnectionMapping from "@/models/ChatGroupConnectionMapping";
 import HubConnectionMapping from "@/interfaces/HubConnectionMapping";
+import UserStore from "@/store/UserStore"
+import Vue from "vue"
 
 export interface IChatStoreState {
 }
@@ -80,10 +82,9 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
   @Action
   async createOrUpdateChat(payload: Chat) {
     const path = ChatStoreModule.apiPath + "/createOrUpdate";
-    // console.log("createOrUpdateChat",path, payload)
     try {
       const response = await ApiService.post<Chat>(path, payload);
-      this.CREATE_OR_UPDATE_CHAT(response.data);
+      // this.CREATE_OR_UPDATE_CHAT(response.data);
     } catch (error) {
       
     }
@@ -97,6 +98,32 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
     } else {
       this.chats.push(Chat.fromApi(payload));
     }
+  }
+
+  @Action
+  updateChatUsers(hubResponse: HubResponse<Chat>) {
+    this.UPDATE_CHAT_USERS(hubResponse.data);
+  }
+
+  @Mutation
+  UPDATE_CHAT_USERS(payload: Chat) {
+    const chat = this.chats.find(c => c.id === payload.id)
+    if (!chat) {
+      this.chats.push(Chat.fromApi(payload));
+      Vue.prototype.$chatHub.connection.invoke("JoinChat", payload.id)
+      return
+    } 
+
+    const userId = UserStore.me?.id
+    const chatIndex = this.chats.findIndex(c => c.id === payload.id) 
+    if (userId && payload.chatUserIds.includes(userId)) {
+      this.chats.splice(chatIndex, 1, Chat.fromApi(payload));
+    }
+    if (userId && !payload.chatUserIds.includes(userId)) {
+      this.chats.splice(chatIndex, 1)
+      Vue.prototype.$chatHub.connection.invoke("LeaveChat", payload.id)
+    }
+
   }
 
   @Action
@@ -123,7 +150,7 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
   @Action
   broadcastChatMessage(hubResponse: HubResponse<Message>) {
-    console.log("broadcastChatMessage", hubResponse.data)
+    // console.log("broadcastChatMessage", hubResponse.data)
     this.BOARDCAST_CHAT_MESSAGE(hubResponse.data);
   }
 
@@ -206,7 +233,7 @@ export class ChatStoreModule extends VuexModule implements IChatStoreState {
 
   @Mutation
   UPDATE_MESSAGING_STATUS(payload: {chatId: string, incoming: boolean}) {
-    console.log("UPDATE_MESSAGING_STATUS", payload)
+    // console.log("UPDATE_MESSAGING_STATUS", payload)
     const chat = this.chats.find(c => c.id === payload.chatId);
     if (chat) {
       chat.messageIncoming = payload.incoming
@@ -255,6 +282,7 @@ const ChatStore = getModule(ChatStoreModule);
 
 export const chatHubMethodHandlers: HubMethodHandler[] = [
   {name: "ReceiveMessage", handler: ChatStore.receiveMessage},
+  {name: "UpdateChatUsers", handler: ChatStore.updateChatUsers},
   {name: "BroadcastChatMessage", handler: ChatStore.broadcastChatMessage},
   {name: "ShowFailedChatMessageToSender", handler: ChatStore.showFailedChatMessageToSender},
   {name: "AddConnectionMappings", handler: ChatStore.addConnectionMappings},
