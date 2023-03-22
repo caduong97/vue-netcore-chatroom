@@ -39,6 +39,7 @@ export default class App extends Vue {
 
   async fetchAllData() {
     if (AuthStore.isAuthenticated) {
+      this.$chatHubInstance.start(this.$chatHub.connection)
       // await UserStore.getMe();
       await UserStore.getAllUsers();
     }

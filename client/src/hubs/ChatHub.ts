@@ -8,6 +8,7 @@ import { firebaseAuthPluginInstance } from '@/plugins/firebaseAuthPlugin';
 declare module "vue/types/vue" {
   interface Vue {
     $chatHub: any;
+    $chatHubInstance: any
   }
 }
 
@@ -62,13 +63,13 @@ export default {
       console.log('Reconnecting interval', error);
     });
     
-    vue.prototype.$projectHubInstance = this;
+    vue.prototype.$chatHubInstance = this;
 
     (window as any).signalR = connection;
     
-    // TODO: Decide if start connection will be called later, 
+    // NOTE: Start connection will be called later, 
     // due to the fact that the authentication can take longer, and this.start should wait until after user has authenticated
-    this.start(connection);
+    // this.start(connection);
   },
 
   start (connection: HubConnection) {
