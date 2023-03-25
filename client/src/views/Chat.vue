@@ -1,8 +1,18 @@
 <template>
   <v-container fluid class="d-flex align-center pa-0">
-      <v-card color="#E3F2FD" height="100%" width="100%" tile class="d-flex flex-column align">
+      <v-card 
+        color="#E3F2FD" 
+        height="100%" 
+        width="100%" 
+        tile 
+        class="d-flex flex-column align chat-window" 
+      >
         <LoadingIndicator :loading="loading"/>
-        <v-card-text class="mt-auto d-flex flex-column-reverse chat-message-container" style="overflow-y: auto;">
+        
+        <v-card-text 
+          class="mt-auto d-flex flex-column-reverse chat-message-container" 
+          style="overflow-y: auto;"
+        >
           <v-slide-y-reverse-transition>
             <v-sheet
               v-if="chat.messageIncoming"
@@ -15,11 +25,13 @@
               class="d-flex align-center justify-center pa-3"
             >
               <div class="dot-typing"></div>
-
             </v-sheet>
           </v-slide-y-reverse-transition>
-          
-          <div v-for="key in groupedSortedMessagesByDayKeys" :key="key" class="d-flex flex-column-reverse mt-8 mb-4">
+          <div 
+            v-for="key in groupedSortedMessagesByDayKeys" 
+            :key="key" 
+            class="d-flex flex-column-reverse mt-8 mb-4"
+          >
             <MessageItem 
               v-for="(message, index) in groupedSortedMessagesByDay[key]" 
               :key="index" 
@@ -29,12 +41,13 @@
               @messageClick="showMessageAdditionalInfo(message)"
             />
             <span class="chat-message-container__date">{{ key }}</span>
-
           </div>
-
         </v-card-text>
         
-        <v-card-actions style="background: #fff; height: 100px;" class="align-self-stretch">
+        <v-card-actions 
+          style="background: #fff; height: 100px;" 
+          class="align-self-stretch"
+        >
           <v-row class="pl-3" >
             <v-col sm="11">
               <v-text-field
@@ -76,6 +89,7 @@ import User from "@/models/User";
 import MessageItem from "@/components/Message.vue"
 import LoadingIndicator from "@/components/LoadingIndicator.vue"
 import { Guid } from "guid-typescript";
+import MainStore from "@/store/MainStore";
 
 Component.registerHooks([
   "beforeRouteLeave",
@@ -109,7 +123,7 @@ export default class ChatView extends Vue {
     if (newVal !== null && newVal !== oldVal) {
       await this.initChat();
       this.initMessage();
-      this.markMessagesAsSeen();
+      await this.markMessagesAsSeen();
     }
     
   }
@@ -139,7 +153,7 @@ export default class ChatView extends Vue {
     return Object.keys(this.groupedSortedMessagesByDay);
   }
 
-  get unseenMessages() {
+  get unseenMessages(): Message[] {
     return this.sortedMessages.filter(m => !m.seen);
   }
 
@@ -237,7 +251,18 @@ export default class ChatView extends Vue {
   //   next()
   // }
 
-  async created() {
+  onAppVisibityChange(visible: boolean) {
+    if (visible) {
+      this.markMessagesAsSeen()
+    } 
+  }
+
+  created() {
+    this.$root.$on("appVisibilityChange", this.onAppVisibityChange)
+  }
+
+  beforeDestroy() {
+    this.$root.$off("appVisibilityChange", this.onAppVisibityChange)
   }
 }
 </script>
